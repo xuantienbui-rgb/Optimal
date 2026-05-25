@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>PMAX Account Optimization Dashboard v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --pmax-blue:#0000FF;--pmax-blue-dark:#0000CC;--pmax-blue-light:#E5E5FF;
+  --pmax-azure:#0080FF;--pmax-azure-light:#E0F0FF;
+  --pmax-aqua:#00FFFF;--pmax-aqua-light:#E0FFFF;
+  --pmax-red:#FF0000;--pmax-red-light:#FFE5E5;
+  --pmax-vivid-orange:#FF6000;--pmax-vivid-orange-light:#FFEFE5;
+  --pmax-orange:#FFA500;--pmax-orange-light:#FFF4DB;
+  --green:#1b8a3a;--green-light:#E8F5EC;
+  --gray-50:#FAFAFA;--gray-100:#F5F5F5;--gray-200:#EAEAEA;--gray-300:#D4D4D4;
+  --gray-500:#737373;--gray-700:#404040;--gray-900:#171717;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--gray-50);color:var(--gray-900);font-weight:400;line-height:1.5}
+
+.hero{background:var(--pmax-blue);color:white;padding:48px 32px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-50px;right:-80px;width:300px;height:200px;background:var(--pmax-aqua);transform:skewX(23.5deg);opacity:.4}
+.hero::after{content:"";position:absolute;bottom:-40px;left:30%;width:200px;height:80px;background:var(--pmax-vivid-orange);transform:skewX(23.5deg);opacity:.9}
+.hero-content{max-width:1500px;margin:0 auto;position:relative;z-index:2}
+.hero-eyebrow{color:var(--pmax-aqua);font-family:'Archivo',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:2px;font-size:12px;margin-bottom:12px}
+.hero-title{font-family:'Archivo',sans-serif;font-stretch:112.5%;font-weight:900;font-size:42px;letter-spacing:-1.5px;line-height:1.05;margin-bottom:8px}
+.hero-sub{font-size:14px;opacity:.9;font-weight:300}
+
+.container{max-width:1500px;margin:0 auto;padding:0 32px 32px}
+
+/* MAIN TABS */
+.main-tabs{display:flex;gap:0;margin:24px 0 0;border-bottom:3px solid var(--pmax-blue);background:white;border-top:1px solid var(--gray-200);border-left:1px solid var(--gray-200);border-right:1px solid var(--gray-200)}
+.main-tab{padding:18px 28px;cursor:pointer;border:none;background:none;font-family:'Archivo',sans-serif;font-weight:800;color:var(--gray-500);font-size:13px;text-transform:uppercase;letter-spacing:1px;border-right:1px solid var(--gray-200);transition:.2s;flex:1;text-align:center}
+.main-tab:hover{background:var(--gray-50)}
+.main-tab.active{color:white;background:var(--pmax-blue)}
+.main-panel{display:none;background:white;border:1px solid var(--gray-200);border-top:none;padding:24px}
+.main-panel.active{display:block}
+
+.section{margin-bottom:18px}
+.section-eyebrow{color:var(--pmax-vivid-orange);font-family:'Archivo',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-size:10px;margin-bottom:6px}
+.section h2{font-family:'Archivo',sans-serif;font-stretch:112.5%;font-weight:800;font-size:22px;color:var(--pmax-blue);letter-spacing:-0.5px;line-height:1.2;margin-bottom:14px}
+.section h3{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;color:var(--gray-900);margin:14px 0 10px;letter-spacing:-0.3px}
+
+.insight{padding:14px 18px;border-left:4px solid;font-size:13px;margin:12px 0}
+.insight-info{background:var(--pmax-aqua-light);border-color:var(--pmax-azure)}
+.insight-warn{background:var(--pmax-red-light);border-color:var(--pmax-red)}
+.insight-action{background:var(--pmax-orange-light);border-color:var(--pmax-vivid-orange)}
+.insight-win{background:var(--green-light);border-color:var(--green)}
+.insight b{color:var(--pmax-blue);font-weight:700}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi{background:var(--gray-50);padding:16px;border:1px solid var(--gray-200)}
+.kpi-label{font-family:'Archivo',sans-serif;font-weight:700;font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px}
+.kpi-value{font-family:'Archivo',sans-serif;font-stretch:112.5%;font-weight:900;font-size:26px;margin-top:4px;color:var(--pmax-blue);letter-spacing:-0.8px;line-height:1.1}
+.kpi-value.warn{color:var(--pmax-red)}.kpi-value.win{color:var(--green)}
+.kpi-sub{font-size:11px;color:var(--gray-500);margin-top:2px}
+
+.delta-good{color:var(--green);font-weight:700}.delta-bad{color:var(--pmax-red);font-weight:700}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--gray-200)}
+th{background:var(--pmax-blue);color:white;font-family:'Archivo',sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:hover td{background:var(--gray-50)}
+
+.tag{display:inline-block;padding:3px 9px;font-family:'Archivo',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.tag-brand{background:var(--pmax-blue);color:white}
+.tag-generic{background:var(--green);color:white}
+.tag-competitor{background:var(--pmax-vivid-orange);color:white}
+.tag-pass{background:var(--green-light);color:var(--green)}
+.tag-fail{background:var(--pmax-red-light);color:var(--pmax-red)}
+.tag-scale{background:var(--green);color:white}
+.tag-pause{background:var(--pmax-red);color:white}
+.tag-hold{background:var(--gray-300);color:var(--gray-700)}
+.tag-standard{background:var(--pmax-azure);color:white}
+.tag-aggressive{background:var(--pmax-vivid-orange);color:white}
+tr.row-aggressive{background:var(--pmax-vivid-orange-light)}
+tr.row-aggressive td{font-weight:500}
+
+.scenarios{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.scenarios.s4{grid-template-columns:1fr 1fr 1fr 1fr}
+.s-card{padding:20px;border:2px solid;position:relative;overflow:hidden}
+.s-card::before{content:"";position:absolute;top:-20px;right:-20px;width:80px;height:40px;transform:skewX(23.5deg);opacity:.15}
+.s-A{border-color:var(--gray-300);background:white}.s-A::before{background:var(--gray-500)}
+.s-B{border-color:var(--green);background:var(--green-light)}.s-B::before{background:var(--green)}
+.s-C{border-color:var(--pmax-blue);background:var(--pmax-blue-light)}.s-C::before{background:var(--pmax-blue)}
+.s-D{border-color:var(--pmax-vivid-orange);background:var(--pmax-vivid-orange-light)}.s-D::before{background:var(--pmax-vivid-orange)}
+.s-name{font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.s-metric{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.08);font-size:13px}
+.s-metric:last-child{border:none}
+.s-metric span{color:var(--gray-700);font-weight:500}
+.s-metric b{font-family:'Archivo',sans-serif;font-weight:800;font-variant-numeric:tabular-nums;font-size:14px;letter-spacing:-0.3px}
+.s-delta{font-size:11px;color:var(--gray-500);margin-left:6px;font-weight:600}
+
+.assumptions{background:var(--pmax-aqua-light);border-left:4px solid var(--pmax-azure);padding:14px 18px;font-size:12px;margin-bottom:18px;line-height:1.6}
+.assumptions b{color:var(--pmax-blue);font-family:'Archivo',sans-serif;font-weight:700}
+
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.split-card{background:var(--gray-50);padding:18px;border-left:4px solid;border-top:1px solid var(--gray-200);border-right:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}
+.split-card.sem{border-left-color:var(--pmax-blue)}
+.split-card.pmax{border-left-color:var(--pmax-vivid-orange)}
+.split-eyebrow{font-family:'Archivo',sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.split-card.sem .split-eyebrow{color:var(--pmax-blue)}
+.split-card.pmax .split-eyebrow{color:var(--pmax-vivid-orange)}
+
+.big-row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.big-stat{flex:1;min-width:120px}
+.big-stat-num{font-family:'Archivo',sans-serif;font-weight:900;font-size:28px;color:var(--pmax-blue);letter-spacing:-1px;line-height:1}
+.big-stat-label{font-size:10px;text-transform:uppercase;color:var(--gray-500);font-weight:700;letter-spacing:1px;margin-top:4px;font-family:'Archivo',sans-serif}
+
+/* ISSUE BAR */
+.issue-bar{display:inline-block;width:80px;height:8px;background:var(--gray-200);overflow:hidden;vertical-align:middle;margin-right:8px}
+.issue-bar-fill{height:100%}
+.issue-good{background:var(--green)}
+.issue-bad{background:var(--pmax-red)}
+.issue-warn{background:var(--pmax-vivid-orange)}
+.flag{color:var(--pmax-red);font-weight:700}
+.ok{color:var(--green);font-weight:700}
+
+/* SUB TABS (within SEM details) */
+.tabs{display:flex;gap:0;margin-bottom:14px;border-bottom:2px solid var(--gray-200)}
+.tab{padding:10px 20px;cursor:pointer;border:none;background:none;font-family:'Archivo',sans-serif;font-weight:700;color:var(--gray-500);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.tab.active{color:var(--pmax-blue);border-bottom:3px solid var(--pmax-vivid-orange);margin-bottom:-2px}
+.panel{display:none}.panel.active{display:block}
+
+/* CHART GRID - Summary */
+.chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:18px}
+.chart-card{background:var(--gray-50);padding:14px 14px 10px;border:1px solid var(--gray-200);position:relative}
+.chart-card .chart-title{font-family:'Archivo',sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--pmax-blue);margin-bottom:8px}
+.chart-card .chart-sub{font-size:10px;color:var(--gray-500);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-family:'Archivo',sans-serif}
+.chart-card canvas{max-height:260px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">PMAX Media · Full Account Optimization</div>
+    <div class="hero-title">SEM + PMax Optimization Report</div>
+    <div class="hero-sub">Period: Jan 1 – May 13, 2026 · 96 PMax AGs + 1,774 SEM KWs · 3 Scenarios</div>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="main-tabs">
+  <button class="main-tab active" onclick="mainTab('account',event)">📊 Account Summary</button>
+  <button class="main-tab" onclick="mainTab('sem',event)">🔍 SEM (Search)</button>
+  <button class="main-tab" onclick="mainTab('pmax',event)">🚀 PMax (Asset Groups)</button>
+</div>
+
+<!-- ============ ACCOUNT TAB ============ -->
+<div id="panel-account" class="main-panel active">
+
+  <div class="section">
+    <div class="section-eyebrow">Account-level overview</div>
+    <h2>Tổng quan toàn tài khoản</h2>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Total Cost (Current)</div><div class="kpi-value" id="acc-cur-cost">—</div></div>
+      <div class="kpi"><div class="kpi-label">Total Conversions</div><div class="kpi-value win" id="acc-cur-conv">—</div></div>
+      <div class="kpi"><div class="kpi-label">Blended CPA</div><div class="kpi-value" id="acc-cur-cpa">—</div></div>
+      <div class="kpi"><div class="kpi-label">Split SEM / PMax</div><div class="kpi-value" id="acc-split" style="font-size:18px">—</div></div>
+    </div>
+
+    <h3>So sánh 3 kịch bản — Account Level</h3>
+    <div class="scenarios">
+      <div class="s-card s-A">
+        <div class="s-name" style="color:var(--gray-700)">📍 A · Current</div>
+        <div class="s-metric"><span>Cost</span><b id="aA-cost">—</b></div>
+        <div class="s-metric"><span>Conversions</span><b id="aA-conv">—</b></div>
+        <div class="s-metric"><span>Blended CPA</span><b id="aA-cpa">—</b></div>
+      </div>
+      <div class="s-card s-B">
+        <div class="s-name" style="color:var(--green)">🎯 B · Optimized (Neutral Budget)</div>
+        <div class="s-metric"><span>Cost</span><b id="aB-cost">—</b><span class="s-delta">±0%</span></div>
+        <div class="s-metric"><span>Conversions</span><b id="aB-conv">—</b><span class="s-delta delta-good" id="aB-conv-d">—</span></div>
+        <div class="s-metric"><span>Blended CPA</span><b id="aB-cpa">—</b><span class="s-delta delta-good" id="aB-cpa-d">—</span></div>
+      </div>
+      <div class="s-card s-C">
+        <div class="s-name" style="color:var(--pmax-blue)">🚀 C · Scale-up Max</div>
+        <div class="s-metric"><span>Cost</span><b id="aC-cost">—</b><span class="s-delta" id="aC-cost-d">—</span></div>
+        <div class="s-metric"><span>Conversions</span><b id="aC-conv">—</b><span class="s-delta delta-good" id="aC-conv-d">—</span></div>
+        <div class="s-metric"><span>Blended CPA</span><b id="aC-cpa">—</b><span class="s-delta" id="aC-cpa-d">—</span></div>
+        <div class="s-metric"><span>+Budget cần</span><b id="aC-extra" style="color:var(--pmax-vivid-orange)">—</b></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:20px">So sánh 3 kịch bản theo từng metric (đơn vị riêng)</h3>
+    <div class="chart-grid-3">
+      <div class="chart-card">
+        <div class="chart-title">💰 Cost</div>
+        <div class="chart-sub">Đơn vị: Tỷ VND</div>
+        <canvas id="chart-cost" height="180"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🎯 Conversions</div>
+        <div class="chart-sub">Đơn vị: Conv (count)</div>
+        <canvas id="chart-conv" height="180"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📉 Blended CPA</div>
+        <div class="chart-sub">Đơn vị: VND/Conv</div>
+        <canvas id="chart-cpa" height="180"></canvas>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px">Phân tách đóng góp SEM vs PMax</h3>
+    <div class="split-grid">
+      <div class="split-card sem">
+        <div class="split-eyebrow">🔍 SEM Search Campaigns</div>
+        <div class="big-row">
+          <div class="big-stat"><div class="big-stat-num" id="sem-cur-cost">—</div><div class="big-stat-label">Current Cost</div></div>
+          <div class="big-stat"><div class="big-stat-num" id="sem-cur-conv">—</div><div class="big-stat-label">Conv</div></div>
+          <div class="big-stat"><div class="big-stat-num" id="sem-cur-cpa">—</div><div class="big-stat-label">CPA</div></div>
+        </div>
+        <div style="margin-top:14px;font-size:12px;color:var(--gray-700)">Optimized B: <b id="sem-B-summary">—</b></div>
+      </div>
+      <div class="split-card pmax">
+        <div class="split-eyebrow">🚀 PMax Asset Groups</div>
+        <div class="big-row">
+          <div class="big-stat"><div class="big-stat-num" id="pmax-cur-cost">—</div><div class="big-stat-label">Current Cost</div></div>
+          <div class="big-stat"><div class="big-stat-num" id="pmax-cur-conv">—</div><div class="big-stat-label">Conv</div></div>
+          <div class="big-stat"><div class="big-stat-num" id="pmax-cur-cpa">—</div><div class="big-stat-label">CPA</div></div>
+        </div>
+        <div style="margin-top:14px;font-size:12px;color:var(--gray-700)">Optimized S2: <b id="pmax-S2-summary">—</b></div>
+      </div>
+    </div>
+
+    <div class="insight insight-action"><b>Recommendation:</b> <span id="acc-reco">—</span></div>
+  </div>
+</div>
+
+<!-- ============ SEM TAB (FULL v3 CONTENT) ============ -->
+<div id="panel-sem" class="main-panel">
+
+  <div class="assumptions">
+    <b>📌 SEM Assumptions:</b>
+    Diminishing return — <b>CPC +30%</b>/100% scale · <b>CVR −10%</b>/100% scale · Max scale cap <b>3×</b> (realistic auction limit).
+    IS targets: Brand 90% / Generic 60% / Competitor 50%. QS targets: Brand≥9 / Generic≥7 / Competitor≥5.
+    Bad KW = CPA > 2× Avg CPA bucket OR 0 conv. Good KW = CPA < Avg CPA bucket.
+  </div>
+
+  <!-- 1. STRUCTURE -->
+  <div class="section">
+    <div class="section-eyebrow">Section 1 · MECE Audit</div>
+    <h2>Campaign Structure</h2>
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Total Ad Groups</div>
+        <div class="kpi-value" id="ag-total">—</div>
+        <div class="kpi-sub" id="ag-total-sub">— enabled</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Clean MECE %</div>
+        <div class="kpi-value win" id="ag-clean">—</div>
+        <div class="kpi-sub" id="ag-clean-sub">— enabled</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">AGs with Issues</div>
+        <div class="kpi-value warn" id="ag-issue">—</div>
+        <div class="kpi-sub" id="ag-issue-sub">— enabled</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Duplicate KWs</div>
+        <div class="kpi-value warn" id="dup-kw">—</div>
+        <div class="kpi-sub" id="dup-kw-sub">— enabled</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Issue Type</th>
+        <th class="num"># AG Total</th>
+        <th class="num">% Total</th>
+        <th class="num"># AG Enabled</th>
+        <th class="num">% Enabled</th>
+        <th>Description</th>
+      </tr></thead>
+      <tbody id="issue-tbody"></tbody>
+    </table>
+    <div class="insight insight-action" id="structure-insight"><b>Action:</b> <span id="structure-action-text">—</span></div>
+  </div>
+
+  <!-- 2. QUALITY SCORE -->
+  <div class="section">
+    <div class="section-eyebrow">Section 2 · Quality Score</div>
+    <h2>QS Audit (Total / Enabled)</h2>
+    <table id="qs-table">
+      <thead><tr>
+        <th>Bucket</th>
+        <th class="num">Target</th>
+        <th class="num"># KW Total</th>
+        <th class="num"># KW Enabled</th>
+        <th class="num">Avg QS (Enabled)</th>
+        <th class="num">Min (Enabled)</th>
+        <th class="num">Pass Rate (Enabled)</th>
+        <th>Status</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="insight insight-info" id="qs-takeaway"></div>
+  </div>
+
+  <!-- 3. BUDGET SAVE -->
+  <div class="section">
+    <div class="section-eyebrow">Section 3 · Budget Save</div>
+    <h2>Pause Bad Keywords</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Bad KW (Pause)</div><div class="kpi-value warn" id="bad-count">—</div></div>
+      <div class="kpi"><div class="kpi-label">Budget Saved</div><div class="kpi-value warn" id="bad-save">—</div></div>
+      <div class="kpi"><div class="kpi-label">Lost Conv</div><div class="kpi-value" id="bad-lost">—</div><div class="kpi-sub">Conv mất khi pause</div></div>
+      <div class="kpi"><div class="kpi-label">% of Total Cost</div><div class="kpi-value warn" id="bad-pct">—</div></div>
+    </div>
+
+    <h3 style="margin-top:18px">Bad KW breakdown — cắt nhóm nào, bao nhiêu tiền, mất conv gì</h3>
+    <table id="bad-breakdown-table">
+      <thead><tr>
+        <th>Bucket</th>
+        <th class="num"># Bad KW</th>
+        <th class="num">Cost Saved</th>
+        <th class="num">% of Bucket Cost</th>
+        <th class="num">Conv Lost</th>
+        <th class="num">Avg CPA (Bad)</th>
+        <th>Action</th>
+      </tr></thead>
+      <tbody id="bad-breakdown-tbody"></tbody>
+    </table>
+    <div class="insight insight-action" id="bad-breakdown-insight"></div>
+  </div>
+
+  <!-- 4. FEASIBILITY -->
+  <div class="section">
+    <div class="section-eyebrow">Section 4 · Reinvest Feasibility</div>
+    <h2>Diminishing Return Analysis</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Good KW (Eligible)</div><div class="kpi-value win" id="good-count">—</div></div>
+      <div class="kpi"><div class="kpi-label">Max +Conv</div><div class="kpi-value win" id="good-max-conv">—</div><div class="kpi-sub">If full IS cap</div></div>
+      <div class="kpi"><div class="kpi-label">Cost Needed</div><div class="kpi-value" id="good-cost-needed">—</div></div>
+      <div class="kpi"><div class="kpi-label">Coverage</div><div class="kpi-value" id="coverage">—</div><div class="kpi-sub" id="coverage-note">—</div></div>
+    </div>
+    <div class="insight insight-info"><b>Khả thi?</b> <span id="feasibility-text"></span></div>
+
+    <!-- PER-BUCKET REINVEST PLAN (Standard / Aggressive) -->
+    <h3 style="margin-top:22px">Per-Bucket Reinvest Plan — Standard vs Aggressive</h3>
+    <div class="insight insight-info" style="margin-bottom:10px">
+      <b>Logic:</b> Với mỗi bucket, IS hiện tại (weighted theo impressions) vs IS cap chuẩn (Brand 90% / Generic 60% / Competitor 50%).
+      <b>Standard</b> = IS < cap chuẩn → scale đến cap chuẩn.
+      <b>Aggressive</b> = IS đã ≥ cap chuẩn → push tiếp lên 95% (gần saturation). DR phạt nặng hơn 1.5× cho aggressive vì impression marginal kém.
+    </div>
+    <table id="reinvest-detail-table">
+      <thead>
+        <tr>
+          <th>Bucket</th>
+          <th>Strategy</th>
+          <th class="num">Cur IS</th>
+          <th class="num">Cap Std</th>
+          <th class="num">Target IS</th>
+          <th class="num">+IS gap</th>
+          <th class="num"># Good KW</th>
+          <th class="num">+Cost</th>
+          <th class="num">+Conv</th>
+          <th class="num">Cur CPA</th>
+          <th class="num">New CPA</th>
+          <th class="num">Δ CPA</th>
+        </tr>
+      </thead>
+      <tbody id="reinvest-detail-tbody"></tbody>
+    </table>
+
+    <h3 style="margin-top:20px">Top KW được scale (mẫu 3 KW/bucket)</h3>
+    <table id="reinvest-sample-table">
+      <thead>
+        <tr>
+          <th>Bucket</th>
+          <th>Strategy</th>
+          <th>Keyword</th>
+          <th class="num">Cur IS</th>
+          <th class="num">Scale ×</th>
+          <th class="num">+Conv</th>
+          <th class="num">+Cost</th>
+        </tr>
+      </thead>
+      <tbody id="reinvest-sample-tbody"></tbody>
+    </table>
+
+    <div id="aggressive-callout" class="insight insight-action" style="display:none;margin-top:14px"></div>
+  </div>
+
+  <!-- 5. SCENARIOS -->
+  <div class="section">
+    <div class="section-eyebrow">Section 5 · Recommendation</div>
+    <h2>3-Scenario Summary (SEM)</h2>
+    <div class="scenarios">
+      <div class="s-card s-A">
+        <div class="s-name">📍 A · Current</div>
+        <div class="s-metric"><span>Cost</span><b id="sA-cost">—</b></div>
+        <div class="s-metric"><span>Conversions</span><b id="sA-conv">—</b></div>
+        <div class="s-metric"><span>Blended CPA</span><b id="sA-cpa">—</b></div>
+        <div class="s-metric"><span>Action</span><b style="font-size:11px;color:var(--gray-500);font-weight:600">Baseline</b></div>
+      </div>
+      <div class="s-card s-B">
+        <div class="s-name" style="color:var(--green)">🎯 B · Optimized</div>
+        <div class="s-metric"><span>Cost</span><b id="sB-cost">—</b><span class="s-delta" id="sB-cost-d">—</span></div>
+        <div class="s-metric"><span>Conversions</span><b id="sB-conv">—</b><span class="s-delta delta-good" id="sB-conv-d">—</span></div>
+        <div class="s-metric"><span>Blended CPA</span><b id="sB-cpa">—</b><span class="s-delta delta-good" id="sB-cpa-d">—</span></div>
+        <div class="s-metric"><span>Action</span><b style="font-size:11px;color:var(--green);font-weight:700">Pause + Reinvest</b></div>
+      </div>
+      <div class="s-card s-C">
+        <div class="s-name" style="color:var(--pmax-blue)">🚀 C · Scale-up</div>
+        <div class="s-metric"><span>Cost</span><b id="sC-cost">—</b><span class="s-delta" id="sC-cost-d">—</span></div>
+        <div class="s-metric"><span>Conversions</span><b id="sC-conv">—</b><span class="s-delta delta-good" id="sC-conv-d">—</span></div>
+        <div class="s-metric"><span>Blended CPA</span><b id="sC-cpa">—</b><span class="s-delta" id="sC-cpa-d">—</span></div>
+        <div class="s-metric"><span>+Budget Needed</span><b id="sC-extra" style="color:var(--pmax-blue)">—</b></div>
+      </div>
+    </div>
+
+    <div class="insight insight-action"><b>Recommendation:</b> <span id="sem-reco-text"></span></div>
+  </div>
+
+  <!-- DETAIL TABS -->
+  <div class="section">
+    <div class="section-eyebrow">Section 6 · Details</div>
+    <h2>Deep Dive</h2>
+    <div class="tabs">
+      <button class="tab active" onclick="subTab('struct',event)">Structure Issues</button>
+      <button class="tab" onclick="subTab('bad',event)">Bad KW Top 30</button>
+      <button class="tab" onclick="subTab('good',event)">Good KW Top 30</button>
+    </div>
+
+    <div id="panel-struct" class="panel active">
+      <h3>Top 20 Ad Groups (Enabled) vi phạm MECE</h3>
+      <table><thead><tr>
+        <th>Campaign</th><th>Ad group</th><th>KW Type</th><th class="num"># KW</th><th class="num">Match Types</th><th class="num">Word Range</th><th>Issues</th>
+      </tr></thead><tbody id="struct-tbody"></tbody></table>
+    </div>
+
+    <div id="panel-bad" class="panel">
+      <table><thead><tr>
+        <th>Keyword</th><th>Bucket</th><th>Campaign</th><th class="num">QS</th>
+        <th class="num">Cost</th><th class="num">Conv</th><th class="num">CPA</th><th class="num">CPA/Avg</th><th>Reason</th>
+      </tr></thead><tbody id="bad-tbody"></tbody></table>
+    </div>
+
+    <div id="panel-good" class="panel">
+      <table><thead><tr>
+        <th>Keyword</th><th>Bucket</th><th class="num">QS</th><th class="num">Cost</th><th class="num">Conv</th><th class="num">CPA</th>
+        <th class="num">IS</th><th class="num">Cap</th><th class="num">Scale</th><th class="num">CPC →</th><th class="num">+Conv</th><th class="num">+Cost</th><th class="num">New CPA</th>
+      </tr></thead><tbody id="good-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PMAX TAB ============ -->
+<div id="panel-pmax" class="main-panel">
+  <div class="assumptions">
+    <b>📌 PMax Logic:</b> Pareto on Asset Groups. Sort by CPA ascending. Pause bottom performers (high CPA, low conv) + 0-conv AGs → reinvest budget vào top performers với diminishing return.
+    DR multipliers: S1=100% (no DR) / S2=70% / S3=50% (aggressive).
+  </div>
+
+  <div class="section">
+    <div class="section-eyebrow">PMax · Pareto Insight</div>
+    <h2>Pareto Distribution</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Active AGs (cost>0)</div><div class="kpi-value" id="pm-n">—</div></div>
+      <div class="kpi"><div class="kpi-label">Best AG CPA</div><div class="kpi-value win" id="pm-best">—</div></div>
+      <div class="kpi"><div class="kpi-label">Worst AG CPA</div><div class="kpi-value warn" id="pm-worst">—</div></div>
+      <div class="kpi"><div class="kpi-label">Spread</div><div class="kpi-value" id="pm-spread" style="font-size:20px">—</div><div class="kpi-sub">worst/best</div></div>
+    </div>
+
+    <h3>Pareto Table — Cumulative Cost vs Conv</h3>
+    <table id="pm-pareto-table">
+      <thead><tr><th>Threshold (by CPA rank)</th><th class="num">Cost %</th><th class="num">Conv %</th><th class="num">Avg CPA</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="insight insight-win" id="pm-insight">—</div>
+  </div>
+
+  <div class="section">
+    <div class="section-eyebrow">PMax · 3 Scenarios</div>
+    <h2>3 Kịch bản PMax</h2>
+    <div class="scenarios s4">
+      <div class="s-card s-A">
+        <div class="s-name">📍 Baseline</div>
+        <div class="s-metric"><span>Cost</span><b id="pA-cost">—</b></div>
+        <div class="s-metric"><span>Conv</span><b id="pA-conv">—</b></div>
+        <div class="s-metric"><span>CPA</span><b id="pA-cpa">—</b></div>
+        <div class="s-metric"><span>Action</span><b style="font-size:11px;color:var(--gray-500)">No change</b></div>
+      </div>
+      <div class="s-card s-B">
+        <div class="s-name" style="color:var(--green)">🛡️ S1 · Conservative</div>
+        <div class="s-metric"><span>Cost</span><b id="p1-cost">—</b></div>
+        <div class="s-metric"><span>Conv</span><b id="p1-conv">—</b><span class="s-delta delta-good" id="p1-conv-d">—</span></div>
+        <div class="s-metric"><span>CPA</span><b id="p1-cpa">—</b><span class="s-delta delta-good" id="p1-cpa-d">—</span></div>
+        <div class="s-metric"><span>Action</span><b style="font-size:11px">Pause bot 20%, scale top 80%</b></div>
+      </div>
+      <div class="s-card s-C">
+        <div class="s-name" style="color:var(--pmax-blue)">⭐ S2 · Realistic</div>
+        <div class="s-metric"><span>Cost</span><b id="p2-cost">—</b></div>
+        <div class="s-metric"><span>Conv</span><b id="p2-conv">—</b><span class="s-delta delta-good" id="p2-conv-d">—</span></div>
+        <div class="s-metric"><span>CPA</span><b id="p2-cpa">—</b><span class="s-delta delta-good" id="p2-cpa-d">—</span></div>
+        <div class="s-metric"><span>Action</span><b style="font-size:11px">Pause bot 30%, hold mid, scale top 30%×2-3</b></div>
+      </div>
+      <div class="s-card s-D">
+        <div class="s-name" style="color:var(--pmax-vivid-orange)">🔥 S3 · Aggressive</div>
+        <div class="s-metric"><span>Cost</span><b id="p3-cost">—</b></div>
+        <div class="s-metric"><span>Conv</span><b id="p3-conv">—</b><span class="s-delta delta-good" id="p3-conv-d">—</span></div>
+        <div class="s-metric"><span>CPA</span><b id="p3-cpa">—</b><span class="s-delta delta-good" id="p3-cpa-d">—</span></div>
+        <div class="s-metric"><span>Action</span><b style="font-size:11px">All-in top 30%, pause 70%</b></div>
+      </div>
+    </div>
+    <div class="insight insight-action" id="pm-reco">—</div>
+  </div>
+
+  <div class="section">
+    <div class="section-eyebrow">PMax · Action List</div>
+    <h2>Top Performers & Bottom Performers</h2>
+    <h3>🟢 Top 20 efficient (SCALE up)</h3>
+    <table id="pm-top-table">
+      <thead><tr><th>Asset Group</th><th>Campaign</th><th class="num">Cost</th><th class="num">Conv</th><th class="num">CPA</th><th class="num">Cum Cost %</th><th class="num">Cum Conv %</th><th>Action</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <h3 style="margin-top:20px">🔴 Bottom 20 inefficient (PAUSE)</h3>
+    <table id="pm-bot-table">
+      <thead><tr><th>Asset Group</th><th>Campaign</th><th class="num">Cost</th><th class="num">Conv</th><th class="num">CPA</th><th>Action</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center;padding:20px;color:var(--gray-500);font-size:11px;font-family:'Archivo',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:1px">
+  PMAX Media · Internal Analysis · May 2026
+</div>
+
+</div>
+
+<script>
+const D = {"meta": {"account": "861-356-8042", "from": "2026-01-01", "to": "2026-05-25", "generated_at": "2026-05-25"}, "sem": {"scenarios": {"A": {"cost": 3195748691.0, "conv": 25634.0, "cpa": 124668.35807911368}, "B": {"cost": 3195748691.0, "conv": 25761.700049422612, "cpa": 124050.38040459699}, "C": {"cost": 12085080980.014013, "conv": 62886.6311665158, "cpa": 192172.4976492103, "extra_budget": 8889332289.014013}}, "action": {"bad_count": 307, "budget_saved": 75592400.0, "lost_conv": 188.0, "good_count": 81, "full_cost_needed": 8964924689.014013, "coverage": 0.008432017292084341, "realized_conv": 315.7000494226131}, "structure": {"total_ad_groups": 235, "total_ad_groups_enabled": 226, "too_many_kw": 139, "too_many_kw_enabled": 125, "mixed_match": 104, "mixed_match_enabled": 60, "length_var": 138, "length_var_enabled": 123, "bucket_leak": 0, "bucket_leak_enabled": 0, "ag_with_any_issue": 171, "ag_with_any_issue_enabled": 160, "duplicate_kw_count": 3494, "duplicate_kw_count_enabled": 1084, "clean_pct": 27.2, "clean_pct_enabled": 29.2}, "top_structure_issues": [{"Campaign": "Bảo MĐ - Test tháng 1/2024", "Ad group": "Nhóm quảng cáo 1", "KW_Type": "Generic", "KW_Count": 76, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Sáu Web trafic Search - 10/3", "Ad group": "Bệnh lý cơ xương khớp", "KW_Type": "Generic", "KW_Count": 62, "N_Match_Types": 3, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Phrase", "KW_Type": "Generic", "KW_Count": 50, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Thao-Leads-Search-23.04-Tebitaychan", "Ad group": "Ad group 1", "KW_Type": "Generic", "KW_Count": 50, "N_Match_Types": 2, "Word_Len_Range": 5, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Sáu Web trafic Search - 10/3", "Ad group": "Chia sẻ kiến thức", "KW_Type": "Generic", "KW_Count": 39, "N_Match_Types": 3, "Word_Len_Range": 7, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Healdinemoi", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Phrase", "KW_Type": "Generic", "KW_Count": 31, "N_Match_Types": 2, "Word_Len_Range": 5, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "KW_Type": "Generic", "KW_Count": 31, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Phrase", "KW_Type": "Generic", "KW_Count": 29, "N_Match_Types": 2, "Word_Len_Range": 5, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "PFM_BRD_CoXuongKhop #2", "Ad group": "approi_OPTIMAL_GG_SEM_CONV_BOS_Generic_CoXuongKhop_Phrase_ALL_1865B", "KW_Type": "Generic", "KW_Count": 26, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_PKCoXuongKhop", "Ad group": "approi_OPTIMAL_GG_SEM_CONV_BOS_Generic_CoXuongKhop_Phrase_ALL_1865B", "KW_Type": "Generic", "KW_Count": 26, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_NanChinhThanKinh", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_NanChinhThanKinh_Phrase", "KW_Type": "Generic", "KW_Count": 24, "N_Match_Types": 2, "Word_Len_Range": 4, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan_Phrase", "KW_Type": "Generic", "KW_Count": 23, "N_Match_Types": 2, "Word_Len_Range": 5, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "Ad group": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_LUMBAR-SPONDYLOSIS_EngKW_Phrase", "KW_Type": "Generic", "KW_Count": 22, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Phrase", "KW_Type": "Brand", "KW_Count": 21, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Sáu Web trafic Search - 10/3", "Ad group": "branding Chiopractic là gì?", "KW_Type": "Brand", "KW_Count": 21, "N_Match_Types": 2, "Word_Len_Range": 7, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Exact", "KW_Type": "Brand", "KW_Count": 18, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Board", "KW_Type": "Brand", "KW_Count": 17, "N_Match_Types": 3, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_SupportBrandkey", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_SupportBrandKey_Exact", "KW_Type": "Generic", "KW_Count": 17, "N_Match_Types": 2, "Word_Len_Range": 6, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Tuyển dụng", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Board", "KW_Type": "Brand", "KW_Count": 16, "N_Match_Types": 3, "Word_Len_Range": 7, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}, {"Campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Tuyển dụng", "Ad group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Exact", "KW_Type": "Brand", "KW_Count": 11, "N_Match_Types": 2, "Word_Len_Range": 3, "Issue_TooMany": true, "Issue_MultiMatch": true, "Issue_LengthVariance": true, "Issue_BucketLeak": false}], "qs": [{"kw_type": "Brand", "n_total": 345, "n_enabled": 138, "with_qs_total": 345, "with_qs_enabled": 138, "avg_qs_total": 0.65, "avg_qs_enabled": 1.46, "min_qs_total": 0.0, "min_qs_enabled": 0.0, "target": 9, "pass_count_total": 9, "pass_count_enabled": 8, "pass_rate_total": 2.6, "pass_rate_enabled": 5.8, "n": 138, "with_qs": 138, "avg_qs": 1.46, "min_qs": 0.0, "pass_count": 8, "pass_rate": 5.8}, {"kw_type": "Generic", "n_total": 17327, "n_enabled": 6236, "with_qs_total": 17327, "with_qs_enabled": 6236, "avg_qs_total": 0.04, "avg_qs_enabled": 0.11, "min_qs_total": 0.0, "min_qs_enabled": 0.0, "target": 7, "pass_count_total": 32, "pass_count_enabled": 28, "pass_rate_total": 0.2, "pass_rate_enabled": 0.4, "n": 6236, "with_qs": 6236, "avg_qs": 0.11, "min_qs": 0.0, "pass_count": 28, "pass_rate": 0.4}, {"kw_type": "Competitor", "n_total": 1541, "n_enabled": 164, "with_qs_total": 1541, "with_qs_enabled": 164, "avg_qs_total": 0.0, "avg_qs_enabled": 0.0, "min_qs_total": 0.0, "min_qs_enabled": 0.0, "target": 5, "pass_count_total": 0, "pass_count_enabled": 0, "pass_rate_total": 0.0, "pass_rate_enabled": 0.0, "n": 164, "with_qs": 164, "avg_qs": 0.0, "min_qs": 0.0, "pass_count": 0, "pass_rate": 0.0}], "avg_cpa": {"Brand": 97102.77735849057, "Generic": 124648.8285930529}, "reinvest_detail": [{"bucket": "Brand", "strategy": "Standard", "cap_standard": 90, "cap_aggressive": 95, "current_is_weighted": 32.0, "target_is": 90, "is_gap": 58.0, "n_good_kw": 13, "n_bad_kw": 43, "current_cost": 55334875.0, "current_conv": 530.0, "current_cpa": 104405.42452830188, "bad_saved": 13586582.0, "bad_lost_conv": 33.0, "added_cost": 59448103.09501836, "added_conv": 456.3655845800615, "net_cost_delta": 45861521.09501836, "new_cost": 101196396.09501836, "new_conv": 953.3655845800615, "new_cpa": 106146.47490090944, "cpa_change_pct": 1.7, "conv_change_pct": 79.9, "sample_kw": [{"keyword": "optimal chiropractic", "search_top_is": 40.09, "scale": 2.244948865053629, "incr_conv": 259.37552842431273, "incr_cost": 34051101.86086667}, {"keyword": "[neck massage]", "search_top_is": 12.0, "scale": 3.0, "incr_conv": 121.58145120840632, "incr_cost": 16294310.896320002}, {"keyword": "[365 chiropractic]", "search_top_is": 16.78, "scale": 3.0, "incr_conv": 43.207461818181834, "incr_cost": 6476510.476800001}], "note": "IS hiện 32.0% còn room đến cap chuẩn 90%. Scale standard."}, {"bucket": "Generic", "strategy": "Standard", "cap_standard": 60, "cap_aggressive": 95, "current_is_weighted": 16.1, "target_is": 60, "is_gap": 43.9, "n_good_kw": 68, "n_bad_kw": 264, "current_cost": 3140413816.0, "current_conv": 25104.0, "current_cpa": 125096.15264499681, "bad_saved": 62005818.0, "bad_lost_conv": 155.0, "added_cost": 8905476585.918995, "added_conv": 36984.26558193573, "net_cost_delta": 8843470767.918995, "new_cost": 11983884583.918995, "new_conv": 61933.26558193573, "new_cpa": 193496.73348105146, "cpa_change_pct": 54.7, "conv_change_pct": 146.7, "sample_kw": [{"keyword": null, "search_top_is": 18.69, "scale": 3.0, "incr_conv": 7786.988708782179, "incr_cost": 1920709406.1126401}, {"keyword": null, "search_top_is": 18.69, "scale": 3.0, "incr_conv": 7786.988708782179, "incr_cost": 1920709406.1126401}, {"keyword": null, "search_top_is": 18.49, "scale": 3.0, "incr_conv": 7342.5035370710175, "incr_cost": 1770091132.9584005}], "note": "IS hiện 16.1% còn room đến cap chuẩn 60%. Scale standard."}, {"bucket": "Competitor", "strategy": "N/A", "cap_standard": 50, "cap_aggressive": 95, "current_is_weighted": 0, "target_is": 50, "is_gap": 50, "n_good_kw": 0, "n_bad_kw": 0, "current_cost": 0, "current_conv": 0, "current_cpa": 0, "bad_saved": 0, "bad_lost_conv": 0, "added_cost": 0, "added_conv": 0, "net_cost_delta": 0, "new_cost": 0, "new_conv": 0, "new_cpa": 0, "cpa_change_pct": 0, "conv_change_pct": 0, "sample_kw": [], "note": "Bucket Competitor không có spend trong period — không có data để reinvest. Cân nhắc activate Brand KW nếu IS đang lost."}], "bad_breakdown": [{"bucket": "Brand", "n_bad": 43, "cost_saved": 13586582.0, "conv_lost": 33.0, "avg_cpa_bad": 290381.375, "pct_of_bucket_cost": 24.6}, {"bucket": "Generic", "n_bad": 264, "cost_saved": 62005818.0, "conv_lost": 155.0, "avg_cpa_bad": 388298.4583333333, "pct_of_bucket_cost": 2.0}, {"bucket": "Competitor", "n_bad": 0, "cost_saved": 0.0, "conv_lost": 0.0, "avg_cpa_bad": 0, "pct_of_bucket_cost": 0}], "top_bad": [{"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_CHIROPRACTIC_EngKW_Phrase", "ad_group_status": "ENABLED", "keyword": "body treatments near me", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 523, "impressions": 2408, "cost_vnd": 6142441.0, "conversions": 18.0, "conversions_value": 0.0, "ctr": 21.72, "avg_cpc_vnd": 11745.0, "cost_per_conversion_vnd": 341247.0, "search_top_is": 13.98, "search_abs_top_is": 0.0, "search_is": 17.35, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.737667123323603, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[Chiropractor near me]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 3.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 374, "impressions": 2962, "cost_vnd": 5984564.0, "conversions": 24.0, "conversions_value": 0.0, "ctr": 12.63, "avg_cpc_vnd": 16002.0, "cost_per_conversion_vnd": 249357.0, "search_top_is": 15.47, "search_abs_top_is": 10.19, "search_is": 19.32, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.0004760799966115, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Phrase", "ad_group_status": "ENABLED", "keyword": "optimal 365", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 391, "impressions": 1905, "cost_vnd": 3919281.0, "conversions": 14.0, "conversions_value": 0.0, "ctr": 20.52, "avg_cpc_vnd": 10024.0, "cost_per_conversion_vnd": 279949.0, "search_top_is": 18.58, "search_abs_top_is": 12.53, "search_is": 25.29, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 2.883017433852231, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_LUMBAR-SPONDYLOSIS_EngKW_Phrase", "ad_group_status": "ENABLED", "keyword": "chiropractic massage near me", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 5.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 264, "impressions": 2392, "cost_vnd": 3693349.0, "conversions": 14.0, "conversions_value": 0.0, "ctr": 11.04, "avg_cpc_vnd": 13990.0, "cost_per_conversion_vnd": 263811.0, "search_top_is": 12.44, "search_abs_top_is": 0.0, "search_is": 17.07, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.1164338484180756, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan_Phrase", "ad_group_status": "ENABLED", "keyword": "bài tập tê tay", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 7.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 1576, "impressions": 13407, "cost_vnd": 3278613.0, "conversions": 12.0, "conversions_value": 0.0, "ctr": 11.76, "avg_cpc_vnd": 2080.0, "cost_per_conversion_vnd": 273218.0, "search_top_is": 20.27, "search_abs_top_is": 0.0, "search_is": 25.22, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.19190186609766, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_CHIROPRACTIC_EngKW_Phrase", "ad_group_status": "ENABLED", "keyword": "are massages good for you", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 186, "impressions": 1127, "cost_vnd": 3018754.0, "conversions": 8.0, "conversions_value": 0.0, "ctr": 16.5, "avg_cpc_vnd": 16230.0, "cost_per_conversion_vnd": 377344.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 0.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 3.0272566879223017, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Tong hopbenh", "campaign_status": "PAUSED", "ad_group": "Generic_bài tập thể dục thoát vị đĩa đệm_P", "ad_group_status": "ENABLED", "keyword": "bài tập thể dục thoát vị đĩa đệm", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 209, "impressions": 3384, "cost_vnd": 2605586.0, "conversions": 4.0, "conversions_value": 0.0, "ctr": 6.18, "avg_cpc_vnd": 12467.0, "cost_per_conversion_vnd": 651397.0, "search_top_is": 19.05, "search_abs_top_is": 13.68, "search_is": 23.89, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 5.22585737349083, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Phrase", "ad_group_status": "ENABLED", "keyword": "best therapeutic massage near me", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 292, "impressions": 1045, "cost_vnd": 2545292.0, "conversions": 9.0, "conversions_value": 0.0, "ctr": 27.94, "avg_cpc_vnd": 8717.0, "cost_per_conversion_vnd": 282810.0, "search_top_is": 12.19, "search_abs_top_is": 0.0, "search_is": 15.77, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.2688540533606103, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_Exact", "ad_group_status": "ENABLED", "keyword": "[trị liệu vai gáy]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 3.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 633, "impressions": 5807, "cost_vnd": 1963933.0, "conversions": 7.0, "conversions_value": 0.0, "ctr": 10.9, "avg_cpc_vnd": 3103.0, "cost_per_conversion_vnd": 280562.0, "search_top_is": 24.22, "search_abs_top_is": 0.0, "search_is": 31.26, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.2508193872881423, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Phrase", "ad_group_status": "ENABLED", "keyword": "optimal chiropractic", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 117, "impressions": 453, "cost_vnd": 1655969.0, "conversions": 6.0, "conversions_value": 0.0, "ctr": 25.83, "avg_cpc_vnd": 14154.0, "cost_per_conversion_vnd": 275995.0, "search_top_is": 43.56, "search_abs_top_is": 39.26, "search_is": 52.47, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 2.8422976922798315, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_Phrase", "ad_group_status": "ENABLED", "keyword": "massage cổ vai", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 261, "impressions": 2771, "cost_vnd": 1570545.0, "conversions": 6.0, "conversions_value": 0.0, "ctr": 9.42, "avg_cpc_vnd": 6017.0, "cost_per_conversion_vnd": 261758.0, "search_top_is": 18.66, "search_abs_top_is": 0.0, "search_is": 23.5, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.099963577311858, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Phrase", "ad_group_status": "ENABLED", "keyword": "365 chiropractor", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 7.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 117, "impressions": 552, "cost_vnd": 1436776.0, "conversions": 4.0, "conversions_value": 0.0, "ctr": 21.2, "avg_cpc_vnd": 12280.0, "cost_per_conversion_vnd": 359194.0, "search_top_is": 10.08, "search_abs_top_is": 0.0, "search_is": 13.37, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 3.6991114957907274, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Exact", "ad_group_status": "ENABLED", "keyword": "optimal health chiropractic", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 192, "impressions": 396, "cost_vnd": 1323527.0, "conversions": 4.0, "conversions_value": 0.0, "ctr": 48.48, "avg_cpc_vnd": 6893.0, "cost_per_conversion_vnd": 330882.0, "search_top_is": 16.67, "search_abs_top_is": 11.36, "search_is": 31.82, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 3.407544140353757, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[bone chiropractic]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 76, "impressions": 873, "cost_vnd": 1020807.0, "conversions": 3.0, "conversions_value": 0.0, "ctr": 8.71, "avg_cpc_vnd": 13432.0, "cost_per_conversion_vnd": 340269.0, "search_top_is": 14.96, "search_abs_top_is": 10.96, "search_is": 19.11, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.729821080877485, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_Exact", "ad_group_status": "ENABLED", "keyword": "[massage cổ]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 389, "impressions": 3612, "cost_vnd": 1005399.0, "conversions": 4.0, "conversions_value": 0.0, "ctr": 10.77, "avg_cpc_vnd": 2585.0, "cost_per_conversion_vnd": 251350.0, "search_top_is": 15.63, "search_abs_top_is": 0.0, "search_is": 20.03, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.016464998805521, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_CHIROPRACTIC_EngKW_Phrase", "ad_group_status": "ENABLED", "keyword": "deep tissue massages near me", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 60, "impressions": 404, "cost_vnd": 945842.0, "conversions": 1.0, "conversions_value": 0.0, "ctr": 14.85, "avg_cpc_vnd": 15764.0, "cost_per_conversion_vnd": 945842.0, "search_top_is": 50.0, "search_abs_top_is": 50.0, "search_is": 50.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 7.588053659837723, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_Phrase", "ad_group_status": "ENABLED", "keyword": "massage trị liệu vai gáy", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 137, "impressions": 1313, "cost_vnd": 889317.0, "conversions": 2.0, "conversions_value": 0.0, "ctr": 10.43, "avg_cpc_vnd": 6491.0, "cost_per_conversion_vnd": 444658.0, "search_top_is": 13.52, "search_abs_top_is": 0.0, "search_is": 18.44, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 3.5672858302719925, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[Chiropractic adjustment]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 44, "impressions": 305, "cost_vnd": 833504.0, "conversions": 1.0, "conversions_value": 0.0, "ctr": 14.43, "avg_cpc_vnd": 18943.0, "cost_per_conversion_vnd": 833504.0, "search_top_is": 13.29, "search_abs_top_is": 0.0, "search_is": 21.52, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 6.686817753588212, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[Ultrasound therapy]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 57, "impressions": 289, "cost_vnd": 794474.0, "conversions": 2.0, "conversions_value": 0.0, "ctr": 19.72, "avg_cpc_vnd": 13938.0, "cost_per_conversion_vnd": 397237.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 0.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 3.1868490420947233, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan_Phrase", "ad_group_status": "ENABLED", "keyword": "tê tay đau nhức", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 426, "impressions": 3534, "cost_vnd": 766777.0, "conversions": 3.0, "conversions_value": 0.0, "ctr": 12.05, "avg_cpc_vnd": 1800.0, "cost_per_conversion_vnd": 255592.0, "search_top_is": 28.06, "search_abs_top_is": 0.0, "search_is": 34.27, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.050496606225187, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_SupportBrandkey", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_SupportBrandKey_Exact", "ad_group_status": "ENABLED", "keyword": "back and neck massage near me", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 63, "impressions": 362, "cost_vnd": 758462.0, "conversions": 3.0, "conversions_value": 0.0, "ctr": 17.4, "avg_cpc_vnd": 12039.0, "cost_per_conversion_vnd": 252821.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 13.4, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.028266152627852, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_NanChinhThanKinh", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_NanChinhThanKinh_Exact", "ad_group_status": "ENABLED", "keyword": "[phòng khám xương khớp]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 3.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 73, "impressions": 928, "cost_vnd": 736833.0, "conversions": 0.0, "conversions_value": 0.0, "ctr": 7.87, "avg_cpc_vnd": 10094.0, "cost_per_conversion_vnd": 0.0, "search_top_is": 28.88, "search_abs_top_is": 11.04, "search_is": 33.06, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.0, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_LUMBAR-SPONDYLOSIS_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[Lower back pain relief]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 56, "impressions": 282, "cost_vnd": 727378.0, "conversions": 2.0, "conversions_value": 0.0, "ctr": 19.86, "avg_cpc_vnd": 12989.0, "cost_per_conversion_vnd": 363689.0, "search_top_is": 10.97, "search_abs_top_is": 0.0, "search_is": 14.84, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.9177089275933206, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan_Phrase", "ad_group_status": "ENABLED", "keyword": "tê tay khi ngủ", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 790, "impressions": 5666, "cost_vnd": 724890.0, "conversions": 1.0, "conversions_value": 0.0, "ctr": 13.94, "avg_cpc_vnd": 918.0, "cost_per_conversion_vnd": 724890.0, "search_top_is": 37.13, "search_abs_top_is": 18.08, "search_is": 49.09, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 5.815457779924942, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Board", "ad_group_status": "ENABLED", "keyword": "365 optimal", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 22, "impressions": 262, "cost_vnd": 711664.0, "conversions": 0.0, "conversions_value": 0.0, "ctr": 8.4, "avg_cpc_vnd": 32348.0, "cost_per_conversion_vnd": 0.0, "search_top_is": 87.12, "search_abs_top_is": 84.85, "search_is": 90.15, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 0.0, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[chiropractic ho chi minh city]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 7.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 32, "impressions": 484, "cost_vnd": 705397.0, "conversions": 2.0, "conversions_value": 0.0, "ctr": 6.61, "avg_cpc_vnd": 22044.0, "cost_per_conversion_vnd": 352699.0, "search_top_is": 38.05, "search_abs_top_is": 28.76, "search_is": 40.53, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.829541231803097, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Phrase", "ad_group_status": "ENABLED", "keyword": "full body relaxation massage", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 72, "impressions": 622, "cost_vnd": 704089.0, "conversions": 1.0, "conversions_value": 0.0, "ctr": 11.58, "avg_cpc_vnd": 9779.0, "cost_per_conversion_vnd": 704089.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 0.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 5.648580960986594, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Phrase", "ad_group_status": "ENABLED", "keyword": "chiropractor", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 41, "impressions": 556, "cost_vnd": 613200.0, "conversions": 2.0, "conversions_value": 0.0, "ctr": 7.37, "avg_cpc_vnd": 14956.0, "cost_per_conversion_vnd": 306600.0, "search_top_is": 12.2, "search_abs_top_is": 0.0, "search_is": 14.68, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 2.459710239243178, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Phrase", "ad_group_status": "ENABLED", "keyword": "optimal 365 chiropractic", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 13, "impressions": 77, "cost_vnd": 607191.0, "conversions": 2.0, "conversions_value": 0.0, "ctr": 16.88, "avg_cpc_vnd": 46707.0, "cost_per_conversion_vnd": 303596.0, "search_top_is": 88.89, "search_abs_top_is": 88.89, "search_is": 88.89, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 3.1265429090577284, "status": "Bad"}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_TeBiTayChan_Phrase", "ad_group_status": "ENABLED", "keyword": "bị tê tay là dấu hiệu gì", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 468, "impressions": 3661, "cost_vnd": 585735.0, "conversions": 1.0, "conversions_value": 0.0, "ctr": 12.78, "avg_cpc_vnd": 1252.0, "cost_per_conversion_vnd": 585735.0, "search_top_is": 49.51, "search_abs_top_is": 19.23, "search_is": 58.45, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 4.699081464393681, "status": "Bad"}], "top_good": [{"campaign": null, "campaign_status": "ENABLED", "ad_group": null, "ad_group_status": "ENABLED", "keyword": null, "match_type": "TOTAL: SEARCH", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 114204, "impressions": 1057961, "cost_vnd": 600475368.0, "conversions": 4869.0, "conversions_value": 0.0, "ctr": 10.79, "avg_cpc_vnd": 5258.0, "cost_per_conversion_vnd": 123326.0, "search_top_is": 18.69, "search_abs_top_is": 0.0, "search_is": 23.68, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9893875569631577, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 7786.988708782179, "incr_cost": 1920709406.1126401}, {"campaign": null, "campaign_status": "ENABLED", "ad_group": null, "ad_group_status": "ENABLED", "keyword": null, "match_type": "TOTAL: ACCOUNT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 114204, "impressions": 1057961, "cost_vnd": 600475368.0, "conversions": 4869.0, "conversions_value": 0.0, "ctr": 10.79, "avg_cpc_vnd": 5258.0, "cost_per_conversion_vnd": 123326.0, "search_top_is": 18.69, "search_abs_top_is": 0.0, "search_is": 23.68, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9893875569631577, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 7786.988708782179, "incr_cost": 1920709406.1126401}, {"campaign": null, "campaign_status": "ENABLED", "ad_group": null, "ad_group_status": "ENABLED", "keyword": null, "match_type": "TOTAL: KEYWORDS IN YOUR ACCOUNT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 91233, "impressions": 717815, "cost_vnd": 553171919.0, "conversions": 4589.0, "conversions_value": 0.0, "ctr": 12.71, "avg_cpc_vnd": 6063.0, "cost_per_conversion_vnd": 120543.0, "search_top_is": 18.49, "search_abs_top_is": 0.0, "search_is": 23.3, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9670608329063614, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 7342.5035370710175, "incr_cost": 1770091132.9584005}, {"campaign": " --", "campaign_status": "ENABLED", "ad_group": " --", "ad_group_status": "ENABLED", "keyword": null, "match_type": "TOTAL: KEYWORDS", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 91233, "impressions": 717815, "cost_vnd": 553171919.0, "conversions": 4589.0, "conversions_value": 0.0, "ctr": 12.71, "avg_cpc_vnd": 6063.0, "cost_per_conversion_vnd": 120543.0, "search_top_is": 18.49, "search_abs_top_is": 0.0, "search_is": 23.3, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9670608329063614, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 7342.5035370710175, "incr_cost": 1770091132.9584005}, {"campaign": null, "campaign_status": "ENABLED", "ad_group": null, "ad_group_status": "ENABLED", "keyword": null, "match_type": "TOTAL: YOUR KEYWORDS", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 67284, "impressions": 529817, "cost_vnd": 429347645.0, "conversions": 3734.0, "conversions_value": 0.0, "ctr": 12.7, "avg_cpc_vnd": 6381.0, "cost_per_conversion_vnd": 114983.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 0.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9224555200224994, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 5974.644982010583, "incr_cost": 1373941789.3728}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Board", "ad_group_status": "ENABLED", "keyword": "optimal chiropractic", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 2035, "impressions": 12725, "cost_vnd": 19916616.0, "conversions": 238.0, "conversions_value": 0.0, "ctr": 15.99, "avg_cpc_vnd": 9787.0, "cost_per_conversion_vnd": 83683.0, "search_top_is": 40.09, "search_abs_top_is": 36.96, "search_is": 48.07, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 0.8617982129497025, "status": "Good", "is_target_std": 90, "is_target_agg": 95, "strategy": "Standard", "is_target": 90, "scale": 2.244948865053629, "incr_conv": 259.37552842431273, "incr_cost": 34051101.86086667}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "ad_group_status": "ENABLED", "keyword": "[vật lý trị liệu]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 3.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 3002, "impressions": 27451, "cost_vnd": 17203278.0, "conversions": 139.0, "conversions_value": 0.0, "ctr": 10.94, "avg_cpc_vnd": 5731.0, "cost_per_conversion_vnd": 123765.0, "search_top_is": 14.37, "search_abs_top_is": 0.0, "search_is": 18.73, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9929094512717935, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 222.4844112458361, "incr_cost": 55075174.08448}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Board", "ad_group_status": "ENABLED", "keyword": "[neck massage]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 571, "impressions": 2559, "cost_vnd": 5092971.0, "conversions": 76.0, "conversions_value": 0.0, "ctr": 22.31, "avg_cpc_vnd": 8919.0, "cost_per_conversion_vnd": 67013.0, "search_top_is": 12.0, "search_abs_top_is": 12.0, "search_is": 20.0, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 0.6901244415759283, "status": "Good", "is_target_std": 90, "is_target_agg": 95, "strategy": "Standard", "is_target": 90, "scale": 3.0, "incr_conv": 121.58145120840632, "incr_cost": 16294310.896320002}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "ad_group_status": "ENABLED", "keyword": "[trị liệu xương khớp]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 5.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 1590, "impressions": 12512, "cost_vnd": 3670455.0, "conversions": 38.0, "conversions_value": 0.0, "ctr": 12.71, "avg_cpc_vnd": 2308.0, "cost_per_conversion_vnd": 96591.0, "search_top_is": 10.99, "search_abs_top_is": 0.0, "search_is": 13.97, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.7749049958210625, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 60.8105233710692, "incr_cost": 11745136.517120002}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "ad_group_status": "ENABLED", "keyword": "[trị liệu]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 3.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 761, "impressions": 6567, "cost_vnd": 4582127.0, "conversions": 38.0, "conversions_value": 0.0, "ctr": 11.59, "avg_cpc_vnd": 6021.0, "cost_per_conversion_vnd": 120582.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 0.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9673737118996114, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 60.80921187910644, "incr_cost": 14664560.708160002}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "ad_group_status": "ENABLED", "keyword": "[massage xương khớp]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 6.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 626, "impressions": 4642, "cost_vnd": 3294020.0, "conversions": 36.0, "conversions_value": 0.0, "ctr": 13.49, "avg_cpc_vnd": 5262.0, "cost_per_conversion_vnd": 91501.0, "search_top_is": 13.5, "search_abs_top_is": 0.0, "search_is": 16.9, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.734070275932779, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 57.61893623003194, "incr_cost": 10544303.74272}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Exact", "ad_group_status": "ENABLED", "keyword": "[365 chiropractic]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 9.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 264, "impressions": 1302, "cost_vnd": 2023450.0, "conversions": 27.0, "conversions_value": 0.0, "ctr": 20.28, "avg_cpc_vnd": 7665.0, "cost_per_conversion_vnd": 74943.0, "search_top_is": 16.78, "search_abs_top_is": 11.16, "search_is": 27.14, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 0.771790488786128, "status": "Good", "is_target_std": 90, "is_target_agg": 95, "strategy": "Standard", "is_target": 90, "scale": 3.0, "incr_conv": 43.207461818181834, "incr_cost": 6476510.476800001}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "ad_group_status": "ENABLED", "keyword": "[massage đau vai gáy]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 469, "impressions": 2114, "cost_vnd": 2668323.0, "conversions": 23.0, "conversions_value": 0.0, "ctr": 22.19, "avg_cpc_vnd": 5689.0, "cost_per_conversion_vnd": 116014.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 11.27, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9307267569979062, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 36.80757970149254, "incr_cost": 8539809.78368}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "ad_group_status": "ENABLED", "keyword": "[kéo giãn cột sống]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 7.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 1425, "impressions": 9283, "cost_vnd": 1271989.0, "conversions": 20.0, "conversions_value": 0.0, "ctr": 15.35, "avg_cpc_vnd": 893.0, "cost_per_conversion_vnd": 63599.0, "search_top_is": 25.35, "search_abs_top_is": 0.0, "search_is": 30.66, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.5102254126080459, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 2.3668639053254434, "incr_conv": 23.59965880473741, "incr_cost": 2452510.0863690143}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Phrase", "ad_group_status": "ENABLED", "keyword": "yoga trị liệu khớp gối", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 1611, "impressions": 13309, "cost_vnd": 1294778.0, "conversions": 14.0, "conversions_value": 0.0, "ctr": 12.1, "avg_cpc_vnd": 804.0, "cost_per_conversion_vnd": 92484.0, "search_top_is": 19.99, "search_abs_top_is": 0.0, "search_is": 23.12, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.7419564310703394, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 22.391504407200493, "incr_cost": 4143208.8192}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "ad_group_status": "ENABLED", "keyword": "[Đau mỏi cổ vai gáy]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 10.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 1072, "impressions": 11614, "cost_vnd": 1832023.0, "conversions": 18.0, "conversions_value": 0.0, "ctr": 9.23, "avg_cpc_vnd": 1709.0, "cost_per_conversion_vnd": 101779.0, "search_top_is": 25.61, "search_abs_top_is": 0.0, "search_is": 32.12, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.8165259244616158, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 2.342834830144475, "incr_conv": 20.924714605451147, "incr_cost": 3451116.008932784}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Exact", "ad_group_status": "ENABLED", "keyword": "[massage vật lý trị liệu gần đây]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 3.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 212, "impressions": 981, "cost_vnd": 1442253.0, "conversions": 13.0, "conversions_value": 0.0, "ctr": 21.61, "avg_cpc_vnd": 6803.0, "cost_per_conversion_vnd": 110943.0, "search_top_is": 10.97, "search_abs_top_is": 0.0, "search_is": 14.3, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.8900444653371034, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 20.79942113207547, "incr_cost": 4615026.75936}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_NanChinhThanKinh", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_NanChinhThanKinh_Phrase", "ad_group_status": "ENABLED", "keyword": "trị xương khớp tphcm", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 118, "impressions": 1562, "cost_vnd": 1040949.0, "conversions": 13.0, "conversions_value": 0.0, "ctr": 7.55, "avg_cpc_vnd": 8822.0, "cost_per_conversion_vnd": 80073.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 0.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.642388708372208, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 20.78783728813559, "incr_cost": 3329239.3024}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Phrase", "ad_group_status": "ENABLED", "keyword": "trị liệu thần kinh cột sống", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 1137, "impressions": 10525, "cost_vnd": 1444955.0, "conversions": 13.0, "conversions_value": 0.0, "ctr": 10.8, "avg_cpc_vnd": 1271.0, "cost_per_conversion_vnd": 111150.0, "search_top_is": 20.24, "search_abs_top_is": 0.0, "search_is": 24.37, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.8917051307628154, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 2.964426877470356, "incr_conv": 20.51547008169325, "incr_cost": 4510667.659971098}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[Neck and shoulder pain]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 76, "impressions": 504, "cost_vnd": 1192029.0, "conversions": 11.0, "conversions_value": 0.0, "ctr": 15.08, "avg_cpc_vnd": 15685.0, "cost_per_conversion_vnd": 108366.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 0.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.8693703841677306, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 17.60074105263158, "incr_cost": 3814752.6144}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_LUMBAR-SPONDYLOSIS_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[Back pain]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 7.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 87, "impressions": 469, "cost_vnd": 734732.0, "conversions": 6.0, "conversions_value": 0.0, "ctr": 18.55, "avg_cpc_vnd": 8445.0, "cost_per_conversion_vnd": 122455.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 11.11, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9823999261139053, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 9.599944827586206, "incr_cost": 2351074.488}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[chiropractor nearby]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 29, "impressions": 199, "cost_vnd": 460022.0, "conversions": 5.0, "conversions_value": 0.0, "ctr": 14.57, "avg_cpc_vnd": 15863.0, "cost_per_conversion_vnd": 92004.0, "search_top_is": 18.33, "search_abs_top_is": 11.67, "search_is": 23.33, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.7381056126918765, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 7.998427586206898, "incr_cost": 1471797.0588800001}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_NanChinhThanKinh", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_NanChinhThanKinh_Phrase", "ad_group_status": "ENABLED", "keyword": "nắn chỉnh xương khớp", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 95, "impressions": 1325, "cost_vnd": 714063.0, "conversions": 6.0, "conversions_value": 0.0, "ctr": 7.17, "avg_cpc_vnd": 7516.0, "cost_per_conversion_vnd": 119010.0, "search_top_is": 23.45, "search_abs_top_is": 0.0, "search_is": 28.34, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.9547622817101454, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 2.55863539445629, "incr_conv": 7.894413533284251, "incr_cost": 1633319.9489171584}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_VatLyTriLieu_Phrase", "ad_group_status": "ENABLED", "keyword": "ê ẩm cổ vai gáy", "match_type": "BROAD", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 732, "impressions": 9339, "cost_vnd": 501942.0, "conversions": 6.0, "conversions_value": 0.0, "ctr": 7.84, "avg_cpc_vnd": 686.0, "cost_per_conversion_vnd": 83657.0, "search_top_is": 23.81, "search_abs_top_is": 0.0, "search_is": 32.01, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.6711414855980643, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 2.51994960100798, "incr_conv": 7.735425868893122, "incr_cost": 1111543.8664500643}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Exact", "ad_group_status": "ENABLED", "keyword": "[Migraine chiropractic care]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 17, "impressions": 167, "cost_vnd": 144405.0, "conversions": 4.0, "conversions_value": 0.0, "ctr": 10.18, "avg_cpc_vnd": 8494.0, "cost_per_conversion_vnd": 36101.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 0.0, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.2896216547518525, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 6.400225882352941, "incr_cost": 462089.90848}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_EngKW_Phrase", "ad_group_status": "ENABLED", "keyword": "chiropractic clinic", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 19, "impressions": 323, "cost_vnd": 213776.0, "conversions": 4.0, "conversions_value": 0.0, "ctr": 5.88, "avg_cpc_vnd": 11251.0, "cost_per_conversion_vnd": 53444.0, "search_top_is": 0.0, "search_abs_top_is": 0.0, "search_is": 10.42, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.42875653628869015, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 3.0, "incr_conv": 6.39744, "incr_cost": 683787.1756800001}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Board", "ad_group_status": "ENABLED", "keyword": "[365 optimal]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 98, "impressions": 568, "cost_vnd": 707409.0, "conversions": 12.0, "conversions_value": 0.0, "ctr": 17.25, "avg_cpc_vnd": 7218.0, "cost_per_conversion_vnd": 58951.0, "search_top_is": 58.82, "search_abs_top_is": 58.63, "search_is": 61.32, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 0.6070990099733269, "status": "Good", "is_target_std": 90, "is_target_agg": 95, "strategy": "Standard", "is_target": 90, "scale": 1.5300918055083306, "incr_conv": 6.022675511036737, "incr_cost": 434509.38338695833}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Exact", "ad_group_status": "ENABLED", "keyword": "[365 optimal]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 8.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 63, "impressions": 326, "cost_vnd": 618289.0, "conversions": 8.0, "conversions_value": 0.0, "ctr": 19.33, "avg_cpc_vnd": 9814.0, "cost_per_conversion_vnd": 77286.0, "search_top_is": 52.13, "search_abs_top_is": 50.0, "search_is": 61.38, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 0.7959195617512602, "status": "Good", "is_target_std": 90, "is_target_agg": 95, "strategy": "Standard", "is_target": 90, "scale": 1.7264530980241704, "incr_conv": 5.3907891379969035, "incr_cost": 547176.6174846882}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_VatLyTriLieu", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Generic_Massagecovaigay_Exact", "ad_group_status": "ENABLED", "keyword": "[massage cổ vai gáy chuyên sâu]", "match_type": "EXACT", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 1.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 242, "impressions": 2328, "cost_vnd": 462560.0, "conversions": 5.0, "conversions_value": 0.0, "ctr": 10.4, "avg_cpc_vnd": 1911.0, "cost_per_conversion_vnd": 92512.0, "search_top_is": 27.09, "search_abs_top_is": 0.0, "search_is": 34.95, "kw_type": "Generic", "is_enabled": true, "avg_cpa_bucket": 124648.8285930529, "is_cap": 60, "cpa_ratio": 0.7421810621424164, "status": "Good", "is_target_std": 60, "is_target_agg": 95, "strategy": "Standard", "is_target": 60, "scale": 2.2148394241417497, "incr_conv": 5.338749390654627, "incr_cost": 766927.1046957276}, {"campaign": "Pmax_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365", "campaign_status": "ENABLED", "ad_group": "PFM_OPTIMAL_GG_SEM_CONV_BOS_Brand_Optimal365_Board", "ad_group_status": "ENABLED", "keyword": "optimal365", "match_type": "PHRASE", "criterion_status": "ENABLED", "is_negative": false, "quality_score": 0.0, "creative_qs": 0.0, "lp_qs": 0.0, "predicted_ctr_qs": 0.0, "clicks": 247, "impressions": 1044, "cost_vnd": 1585188.0, "conversions": 20.0, "conversions_value": 0.0, "ctr": 23.66, "avg_cpc_vnd": 6418.0, "cost_per_conversion_vnd": 79259.0, "search_top_is": 70.81, "search_abs_top_is": 69.29, "search_is": 75.76, "kw_type": "Brand", "is_enabled": true, "avg_cpa_bucket": 97102.77735849057, "is_cap": 90, "cpa_ratio": 0.8162382390710236, "status": "Good", "is_target_std": 90, "is_target_agg": 95, "strategy": "Standard", "is_target": 90, "scale": 1.271006919926564, "incr_conv": 5.273470928767627, "incr_cost": 464560.5945641909}]}, "pmax": {"baseline": {"total_cost": 0, "total_conv": 0, "cpa": null, "n_ags_enabled": 0, "n_zero_conv": 0}, "pareto": {}, "scenarios": {}}, "account": {"current": {"cost": 3195748691.0, "conv": 25634.0, "cpa": 124668.35807911368}, "optimized": {"cost": 3195748691.0, "conv": 25761.700049422612, "cpa": 124050.38040459699, "conv_delta": 0.49816669042136313, "cpa_delta": -0.49569729162914367}, "maxscale": {"cost": 12085080980.014013, "conv": 62886.6311665158, "cpa": 192172.4976492103, "conv_delta": 145.3250806215019, "cpa_delta": 54.14697089959183, "extra_budget": 8889332289.014013}}};
+
+// === Schema normalizer: map analyzer output (scenarios.{A,B,C}) → template flat schema (sem.A, B, C) ===
+(function normalize(){
+  if (!D.sem) D.sem = {};
+  if (D.sem.scenarios) { Object.assign(D.sem, D.sem.scenarios); }
+  if (!D.pmax) D.pmax = {};
+  if (D.pmax.scenarios) { Object.assign(D.pmax, D.pmax.scenarios); }
+
+  // Action field name mapping
+  if (D.sem.action) {
+    const a = D.sem.action;
+    if (a.coverage !== undefined && a.coverage_b === undefined) a.coverage_b = a.coverage;
+    if (a.realized_conv !== undefined && a.full_conv_max === undefined) a.full_conv_max = a.realized_conv;
+    if (a.additional_for_C === undefined && a.full_cost_needed !== undefined) {
+      a.additional_for_C = Math.max(0, a.full_cost_needed - a.budget_saved);
+    }
+  }
+
+  // Structure field renames
+  if (D.sem.structure) {
+    const s = D.sem.structure;
+    if (s.clean_pct !== undefined && s.pct_clean_ag === undefined) s.pct_clean_ag = s.clean_pct;
+    if (s.too_many_kw !== undefined && s.ag_too_many_kw === undefined) s.ag_too_many_kw = s.too_many_kw;
+    if (s.mixed_match !== undefined && s.ag_mixed_match === undefined) s.ag_mixed_match = s.mixed_match;
+    if (s.ag_with_any_issue === undefined) {
+      s.ag_with_any_issue = (s.too_many_kw||0) + (s.mixed_match||0);
+    }
+  }
+
+  // QS schema từ analyzer mới đã đúng (kw_type, n_total, n_enabled, avg_qs_enabled, pass_rate_enabled)
+  // → JS render code đã handle cả 2 schema, không cần rename
+
+  // top_bad / top_good field renames (analyzer uses lowercase, template expects original)
+  const renameKW = arr => (arr||[]).map(r => ({
+    ...r,
+    Keyword: r.Keyword || r.keyword,
+    KW_Type: r.KW_Type || r.kw_type,
+    Campaign: r.Campaign || r.campaign,
+    'Quality Score': r['Quality Score'] !== undefined ? r['Quality Score'] : r.quality_score,
+    Cost: r.Cost !== undefined ? r.Cost : r.cost_vnd,
+    Conversions: r.Conversions !== undefined ? r.Conversions : r.conversions,
+    'Cost / conv.': r['Cost / conv.'] !== undefined ? r['Cost / conv.'] : r.cost_per_conversion_vnd,
+    CPA_Ratio: r.CPA_Ratio !== undefined ? r.CPA_Ratio : r.cpa_ratio,
+    Status_v3: r.Status_v3 || r.status,
+    'Search top IS': r['Search top IS'] !== undefined ? r['Search top IS'] : r.search_top_is,
+    IS_Cap: r.IS_Cap !== undefined ? r.IS_Cap : r.is_cap,
+    Scale: r.Scale !== undefined ? r.Scale : r.scale,
+    'Avg. CPC': r['Avg. CPC'] !== undefined ? r['Avg. CPC'] : r.avg_cpc_vnd,
+    Incr_Conv: r.Incr_Conv !== undefined ? r.Incr_Conv : r.incr_conv,
+    Incr_Cost: r.Incr_Cost !== undefined ? r.Incr_Cost : r.incr_cost,
+  }));
+  D.sem.top_bad = renameKW(D.sem.top_bad);
+  D.sem.top_good = renameKW(D.sem.top_good);
+
+  // Fallback empty arrays/objects to avoid crash
+  // bucket_b / bucket_c not used anymore (Section 6 tab removed)
+  D.sem.top_structure_issues = D.sem.top_structure_issues || [];
+
+  // PMax fallbacks (account this period has 0 PMax cost)
+  D.pmax.baseline = D.pmax.baseline || {total_cost:0,total_conv:0,cpa:0,n_ags_enabled:0,n_zero_conv:0};
+  const pmDefault = {new_conv:0, conv_change_pct:0, new_cpa:0, cpa_change_pct:0, new_cost:D.pmax.baseline.total_cost||0, n_paused:0, n_scaled:0, n_held:0};
+  D.pmax.S1 = D.pmax.S1 || {...pmDefault};
+  D.pmax.S2 = D.pmax.S2 || {...pmDefault};
+  D.pmax.S3 = D.pmax.S3 || {...pmDefault};
+  D.pmax.pareto = Object.assign({top20_cost_pct:0,top20_conv_pct:0,top20_cpa:0,top30_cost_pct:0,top30_conv_pct:0,top30_cpa:0,top50_cost_pct:0,top50_conv_pct:0,top50_cpa:0,best_cpa:0,worst_cpa:0,median_cpa:0,p75_cpa:0}, D.pmax.pareto||{});
+  D.pmax.top_perf = D.pmax.top_perf || [];
+  D.pmax.bottom_perf = D.pmax.bottom_perf || [];
+})();
+function fmt(n,d=0){if(n==null||isNaN(n))return '—';return Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function fmtVND(n){if(n==null||isNaN(n))return '—';if(Math.abs(n)>=1e9)return (n/1e9).toFixed(2)+'B';if(Math.abs(n)>=1e6)return (n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return (n/1e3).toFixed(0)+'K';return Math.round(n).toLocaleString()}
+function fmtPct(n,d=1){if(n==null||isNaN(n))return '—';return (n>=0?'+':'')+Number(n).toFixed(d)+'%'}
+function tag(t){const cls=t==='Brand'?'tag-brand':(t==='Competitor'?'tag-competitor':'tag-generic');return `<span class="tag ${cls}">${t}</span>`}
+function mainTab(name,e){document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.main-panel').forEach(p=>p.classList.remove('active'));e.target.classList.add('active');document.getElementById('panel-'+name).classList.add('active');}
+function subTab(name,e){const panels=['struct','bad','good'];e.target.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));panels.forEach(p=>{const el=document.getElementById('panel-'+p);if(el)el.classList.remove('active');});e.target.classList.add('active');document.getElementById('panel-'+name).classList.add('active');}
+
+// ============ ACCOUNT TAB ============
+const acc=D.account;
+document.getElementById('acc-cur-cost').textContent=fmtVND(acc.current.cost);
+document.getElementById('acc-cur-conv').textContent=fmt(acc.current.conv,0);
+document.getElementById('acc-cur-cpa').textContent=fmtVND(acc.current.cpa);
+const semPct=D.sem.A.cost/acc.current.cost*100;
+document.getElementById('acc-split').textContent=`${semPct.toFixed(0)}% / ${(100-semPct).toFixed(0)}%`;
+
+document.getElementById('aA-cost').textContent=fmtVND(acc.current.cost);
+document.getElementById('aA-conv').textContent=fmt(acc.current.conv,0);
+document.getElementById('aA-cpa').textContent=fmtVND(acc.current.cpa);
+
+document.getElementById('aB-cost').textContent=fmtVND(acc.optimized.cost);
+document.getElementById('aB-conv').textContent=fmt(acc.optimized.conv,0);
+document.getElementById('aB-cpa').textContent=fmtVND(acc.optimized.cpa);
+document.getElementById('aB-conv-d').textContent=fmtPct(acc.optimized.conv_delta);
+document.getElementById('aB-cpa-d').textContent=fmtPct(acc.optimized.cpa_delta);
+document.getElementById('aB-cpa-d').className=acc.optimized.cpa_delta<0?'s-delta delta-good':'s-delta delta-bad';
+
+document.getElementById('aC-cost').textContent=fmtVND(acc.maxscale.cost);
+document.getElementById('aC-conv').textContent=fmt(acc.maxscale.conv,0);
+document.getElementById('aC-cpa').textContent=fmtVND(acc.maxscale.cpa);
+document.getElementById('aC-cost-d').textContent=fmtPct((acc.maxscale.cost-acc.current.cost)/acc.current.cost*100);
+document.getElementById('aC-conv-d').textContent=fmtPct(acc.maxscale.conv_delta);
+document.getElementById('aC-cpa-d').textContent=fmtPct(acc.maxscale.cpa_delta);
+document.getElementById('aC-cpa-d').className=acc.maxscale.cpa_delta<0?'s-delta delta-good':'s-delta delta-bad';
+document.getElementById('aC-extra').textContent=fmtVND(acc.maxscale.extra_budget);
+
+// Split cards
+document.getElementById('sem-cur-cost').textContent=fmtVND(D.sem.A.cost);
+document.getElementById('sem-cur-conv').textContent=fmt(D.sem.A.conv,0);
+document.getElementById('sem-cur-cpa').textContent=fmtVND(D.sem.A.cpa);
+document.getElementById('sem-B-summary').textContent=`Conv ${fmt(D.sem.B.conv,0)} (+${fmt((D.sem.B.conv-D.sem.A.conv)/D.sem.A.conv*100,1)}%), CPA ${fmtVND(D.sem.B.cpa)} (${fmt((D.sem.B.cpa-D.sem.A.cpa)/D.sem.A.cpa*100,1)}%)`;
+
+document.getElementById('pmax-cur-cost').textContent=fmtVND(D.pmax.baseline.total_cost);
+document.getElementById('pmax-cur-conv').textContent=fmt(D.pmax.baseline.total_conv,0);
+document.getElementById('pmax-cur-cpa').textContent=fmtVND(D.pmax.baseline.cpa);
+document.getElementById('pmax-S2-summary').textContent=`Conv ${fmt(D.pmax.S2.new_conv,0)} (${fmtPct(D.pmax.S2.conv_change_pct)}), CPA ${fmtVND(D.pmax.S2.new_cpa)} (${fmtPct(D.pmax.S2.cpa_change_pct)})`;
+
+document.getElementById('acc-reco').innerHTML=`
+  <b>Phase 1 (Quick win, 0 extra budget):</b> Run SEM Scenario B (pause ${D.sem.action.bad_count} KW, reinvest ${fmtVND(D.sem.action.budget_saved)}) + PMax S2 (pause ${D.pmax.S2.n_paused} bottom AGs, scale top ${D.pmax.S2.n_scaled} AGs ×2-3) → <b>+${fmt(acc.optimized.conv_delta,1)}% conv toàn tài khoản</b>, CPA <b>${fmt(acc.optimized.cpa_delta,1)}%</b>.<br>
+  <b>Phase 2 (Scale-up, +${fmtVND(acc.maxscale.extra_budget)} budget):</b> Push SEM C (full IS cap) + PMax S3 (all-in top 30%) → <b>+${fmt(acc.maxscale.conv_delta,0)}% conv</b>, CPA chỉ ${fmt(acc.maxscale.cpa_delta,1)}% so với baseline.<br>
+  <b>Risk:</b> PMax learning phase 7-14 ngày khi pause/scale mạnh. Recommend test S2 trước 2-3 tuần rồi quyết định escalate S3.
+`;
+
+// ===== Account: 3 separate charts (Cost / Conv / CPA) =====
+const accLabels=['A · Current','B · Optimized','C · Scale-up'];
+const accColors=['#737373','#1b8a3a','#0000FF'];
+const baseOpt={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{}}},
+  scales:{y:{beginAtZero:true,ticks:{font:{family:'Inter',size:10}}},x:{ticks:{font:{family:'Archivo',weight:'700',size:10}}}}
+};
+new Chart(document.getElementById('chart-cost'),{
+  type:'bar',
+  data:{labels:accLabels,datasets:[{label:'Cost (B VND)',data:[acc.current.cost/1e9,acc.optimized.cost/1e9,acc.maxscale.cost/1e9],backgroundColor:accColors}]},
+  options:{...baseOpt,plugins:{...baseOpt.plugins,tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(2)+' B VND'}}}}
+});
+new Chart(document.getElementById('chart-conv'),{
+  type:'bar',
+  data:{labels:accLabels,datasets:[{label:'Conversions',data:[acc.current.conv,acc.optimized.conv,acc.maxscale.conv],backgroundColor:accColors}]},
+  options:{...baseOpt,plugins:{...baseOpt.plugins,tooltip:{callbacks:{label:c=>Math.round(c.parsed.y).toLocaleString()+' conv'}}}}
+});
+new Chart(document.getElementById('chart-cpa'),{
+  type:'bar',
+  data:{labels:accLabels,datasets:[{label:'CPA (VND)',data:[acc.current.cpa,acc.optimized.cpa,acc.maxscale.cpa],backgroundColor:accColors}]},
+  options:{...baseOpt,plugins:{...baseOpt.plugins,tooltip:{callbacks:{label:c=>Math.round(c.parsed.y).toLocaleString()+' VND'}}}}
+});
+
+// ============ SEM TAB (FULL v3) ============
+const S=D.sem.structure;
+// Section 1: Structure — show both Total và Enabled
+document.getElementById('ag-total').textContent=fmt(S.total_ad_groups);
+document.getElementById('ag-total-sub').textContent=fmt(S.total_ad_groups_enabled||0)+' enabled';
+document.getElementById('ag-clean').textContent=S.pct_clean_ag+'%';
+document.getElementById('ag-clean-sub').textContent=(S.pct_clean_ag_enabled||0)+'% enabled';
+document.getElementById('ag-issue').textContent=fmt(S.ag_with_any_issue);
+document.getElementById('ag-issue-sub').textContent=fmt(S.ag_with_any_issue_enabled||0)+' enabled';
+document.getElementById('dup-kw').textContent=fmt(S.duplicate_kw_count);
+document.getElementById('dup-kw-sub').textContent=fmt(S.duplicate_kw_count_enabled||0)+' enabled';
+
+const issues=[
+  {name:'AG có >5 KW', total:S.too_many_kw||S.ag_too_many_kw||0, enabled:S.too_many_kw_enabled||0, desc:'Vi phạm rule: mỗi AG ≤5 KW giống nhau'},
+  {name:'AG mixed match type', total:S.mixed_match||S.ag_mixed_match||0, enabled:S.mixed_match_enabled||0, desc:'Phrase + Broad + Exact lẫn lộn trong 1 AG'},
+  {name:'AG length variance >2 words', total:S.length_var||S.ag_length_variance||0, enabled:S.length_var_enabled||0, desc:'KW dài/ngắn không đồng đều'},
+  {name:'AG bucket leak', total:S.bucket_leak||S.ag_bucket_leak||0, enabled:S.bucket_leak_enabled||0, desc:'KW không match label campaign'},
+  {name:'Duplicate KW cross-AG', total:S.duplicate_kw_count||0, enabled:S.duplicate_kw_count_enabled||0, desc:'Cùng 1 KW chạy ở ≥2 AG (vi phạm exclude)'},
+];
+const _totalAG = S.total_ad_groups || 1;
+const _totalAGEn = S.total_ad_groups_enabled || 1;
+document.getElementById('issue-tbody').innerHTML=issues.map(i=>{
+  // Duplicate KW dùng denominator khác (tổng KW, không phải AG) — nhưng giữ AG để consistent UI; note trong desc
+  const pctTotal = i.total / _totalAG * 100;
+  const pctEnabled = i.enabled / _totalAGEn * 100;
+  const pctTotalCls = pctTotal>=50?'flag':(pctTotal>=20?'':'ok');
+  const pctEnabledCls = pctEnabled>=50?'flag':(pctEnabled>=20?'':'ok');
+  return `<tr>
+    <td>${i.name}</td>
+    <td class="num ${i.total>0?'flag':'ok'}">${fmt(i.total)}</td>
+    <td class="num ${pctTotalCls}">${fmt(pctTotal,1)}%</td>
+    <td class="num ${i.enabled>0?'flag':'ok'}">${fmt(i.enabled)}</td>
+    <td class="num ${pctEnabledCls}">${fmt(pctEnabled,1)}%</td>
+    <td style="color:var(--gray-500);font-size:11px">${i.desc}</td>
+  </tr>`;
+}).join('');
+
+// Dynamic structure action text — match data thực
+const issuePctEnabled = S.total_ad_groups_enabled>0 ? (S.ag_with_any_issue_enabled / S.total_ad_groups_enabled * 100) : 0;
+const issuePctTotal = S.total_ad_groups>0 ? (S.ag_with_any_issue / S.total_ad_groups * 100) : 0;
+const topIssue = issues.slice(0,4).filter(i=>i.enabled>0).sort((a,b)=>b.enabled-a.enabled)[0];
+document.getElementById('structure-action-text').innerHTML =
+  `${fmt(issuePctEnabled,1)}% AG enabled (${fmt(S.ag_with_any_issue_enabled)}/${fmt(S.total_ad_groups_enabled)}) vi phạm structure rule. Trong toàn tài khoản (kể cả paused) là ${fmt(issuePctTotal,1)}% (${fmt(S.ag_with_any_issue)}/${fmt(S.total_ad_groups)}). ` +
+  (topIssue ? `Issue lớn nhất: <b>${topIssue.name}</b> với ${fmt(topIssue.enabled)} AG enabled. ` : '') +
+  `Restructure ưu tiên: (1) Tách AG có >5 KW, (2) Tách KW theo match type, (3) Dedupe ${fmt(S.duplicate_kw_count_enabled||0)} duplicate KW enabled.`;
+
+// Section 2: QS — Total / Enabled
+document.querySelector('#qs-table tbody').innerHTML=D.sem.qs.map(q=>{
+  const target = q.target || q.QS_Target;
+  const avgEn = q.avg_qs_enabled !== undefined ? q.avg_qs_enabled : q.Avg_QS;
+  const minEn = q.min_qs_enabled !== undefined ? q.min_qs_enabled : q.Min_QS;
+  const passEn = q.pass_rate_enabled !== undefined ? q.pass_rate_enabled : q.Pass_Rate_Pct;
+  const passClass = passEn>=95?'tag-pass':(passEn>=70?'tag-hold':'tag-fail');
+  const statusLabel = passEn>=95?'PASS':(passEn>=70?'WATCH':'FAIL');
+  const bucketName = q.kw_type || q.KW_Type;
+  const noEnabled = (q.n_enabled||0)===0;
+  return `<tr ${noEnabled?'style="opacity:0.55"':''}>
+    <td>${tag(bucketName)}</td>
+    <td class="num">≥${target}</td>
+    <td class="num">${fmt(q.n_total||q.n||0)}</td>
+    <td class="num">${fmt(q.n_enabled||0)}</td>
+    <td class="num ${avgEn<target?'flag':''}">${noEnabled?'—':fmt(avgEn,2)}</td>
+    <td class="num ${minEn<target?'flag':''}">${noEnabled?'—':fmt(minEn,1)}</td>
+    <td class="num">${noEnabled?'—':fmt(passEn,1)+'%'}</td>
+    <td>${noEnabled?'<span class="tag tag-hold">NO SPEND</span>':'<span class="tag '+passClass+'">'+statusLabel+'</span>'}</td>
+  </tr>`;
+}).join('');
+
+// QS takeaway dynamic
+const qsRows = D.sem.qs || [];
+const qsFails = qsRows.filter(q => (q.n_enabled||0) > 0 && (q.pass_rate_enabled||q.Pass_Rate_Pct||0) < 95);
+const qsNoSpend = qsRows.filter(q => (q.n_enabled||0) === 0);
+let qsMsg = '';
+if (qsFails.length === 0 && qsNoSpend.length === 0) {
+  qsMsg = `<b>QS overall: HEALTHY.</b> Cả 3 bucket pass rate ≥95%.`;
+} else {
+  const fails = qsFails.map(q => `<b>${q.kw_type||q.KW_Type}</b> pass rate ${fmt(q.pass_rate_enabled||q.Pass_Rate_Pct,1)}% (avg QS ${fmt(q.avg_qs_enabled||q.Avg_QS,2)}, target ≥${q.target||q.QS_Target})`);
+  const noSpends = qsNoSpend.map(q => `<b>${q.kw_type||q.KW_Type}</b> không spend (${fmt(q.n_total||q.n,0)} KW total nhưng 0 enabled)`);
+  qsMsg = `<b>QS issues:</b> ` + [...fails, ...noSpends].join('. ') + `. Action: cải thiện landing page + ad copy cho bucket fail; review bucket no-spend xem có nên reactivate (đặc biệt Brand → IS đối thủ đang giành).`;
+}
+document.getElementById('qs-takeaway').innerHTML = qsMsg;
+
+const ACT=D.sem.action;
+document.getElementById('bad-count').textContent=fmt(ACT.bad_count);
+document.getElementById('bad-save').textContent=fmtVND(ACT.budget_saved);
+document.getElementById('bad-lost').textContent=fmt(ACT.lost_conv,1);
+document.getElementById('bad-pct').textContent=fmt(ACT.budget_saved/D.sem.A.cost*100,1)+'%';
+
+// Section 3: Bad KW breakdown per bucket
+const BB = D.sem.bad_breakdown || [];
+document.getElementById('bad-breakdown-tbody').innerHTML = BB.map(b => {
+  const noSpend = b.n_bad === 0 && b.cost_saved === 0;
+  return `<tr ${noSpend?'style="opacity:0.55"':''}>
+    <td>${tag(b.bucket)}</td>
+    <td class="num">${fmt(b.n_bad)}</td>
+    <td class="num delta-bad">${fmtVND(b.cost_saved)}</td>
+    <td class="num">${fmt(b.pct_of_bucket_cost,1)}% của bucket</td>
+    <td class="num">${fmt(b.conv_lost,1)}</td>
+    <td class="num">${b.avg_cpa_bad>0?fmtVND(b.avg_cpa_bad):'—'}</td>
+    <td style="font-size:11px">${b.n_bad>0 ? `Pause ${fmt(b.n_bad)} KW → save ${fmtVND(b.cost_saved)}` : 'Bucket không có spend trong period'}</td>
+  </tr>`;
+}).join('');
+
+// Bad breakdown insight — top bucket bị cắt nhiều nhất
+const topBad = [...BB].sort((a,b) => b.cost_saved - a.cost_saved)[0];
+if (topBad && topBad.cost_saved > 0) {
+  document.getElementById('bad-breakdown-insight').innerHTML =
+    `<b>Insight:</b> ${topBad.bucket} là bucket bị cắt nhiều nhất — ${fmt(topBad.n_bad)} KW, save <b>${fmtVND(topBad.cost_saved)}</b> (= ${fmt(topBad.pct_of_bucket_cost,1)}% của bucket). Lost conv: ${fmt(topBad.conv_lost,1)}. Avg CPA KW bị cắt: ${fmtVND(topBad.avg_cpa_bad)} (= ${fmt(topBad.avg_cpa_bad/D.sem.avg_cpa[topBad.bucket],1)}× avg bucket CPA).`;
+}
+
+document.getElementById('good-count').textContent=fmt(ACT.good_count);
+document.getElementById('good-max-conv').textContent='+'+fmt(ACT.full_conv_max,0);
+document.getElementById('good-cost-needed').textContent=fmtVND(ACT.full_cost_needed);
+document.getElementById('coverage').textContent=fmt(ACT.coverage_b*100,1)+'%';
+document.getElementById('coverage-note').textContent=ACT.coverage_b<1?`Need +${fmtVND(ACT.additional_for_C)}`:'Đủ budget';
+document.getElementById('feasibility-text').innerHTML=ACT.coverage_b<1
+  ? `KHẢ THI MỘT PHẦN. Budget saved (${fmtVND(ACT.budget_saved)}) chỉ phủ <b>${fmt(ACT.coverage_b*100,1)}%</b> tổng nhu cầu scale. Để chạm full IS cap cần thêm <b>${fmtVND(ACT.additional_for_C)}</b> budget mới — đây là cơ hội mở rộng nếu CFO/Client đồng ý đầu tư.`
+  : 'KHẢ THI TOÀN BỘ. Budget saved đủ để scale full.';
+
+// === Per-Bucket Reinvest Plan (Standard / Aggressive) ===
+const RID = (D.sem && D.sem.reinvest_detail) ? D.sem.reinvest_detail : [];
+const reinvestTbody = document.getElementById('reinvest-detail-tbody');
+const sampleTbody = document.getElementById('reinvest-sample-tbody');
+if (reinvestTbody && RID.length > 0) {
+  reinvestTbody.innerHTML = RID.map(r => {
+    const isAgg = r.strategy === 'Aggressive';
+    const rowCls = isAgg ? 'row-aggressive' : '';
+    const stratTag = isAgg ? '<span class="tag tag-aggressive">Aggressive</span>' : '<span class="tag tag-standard">Standard</span>';
+    const cpaCls = r.new_cpa < r.current_cpa ? 'delta-good' : (r.new_cpa > r.current_cpa ? 'delta-bad' : '');
+    const deltaCpa = r.cpa_change_pct;
+    return `<tr class="${rowCls}">
+      <td>${tag(r.bucket)}</td>
+      <td>${stratTag}</td>
+      <td class="num">${fmt(r.current_is_weighted,1)}%</td>
+      <td class="num">${r.cap_standard}%</td>
+      <td class="num"><b>${r.target_is}%</b></td>
+      <td class="num">+${fmt(r.is_gap,1)}pp</td>
+      <td class="num">${fmt(r.n_good_kw,0)}</td>
+      <td class="num delta-good">+${fmtVND(r.added_cost)}</td>
+      <td class="num delta-good">+${fmt(r.added_conv,0)}</td>
+      <td class="num">${fmtVND(r.current_cpa)}</td>
+      <td class="num ${cpaCls}">${fmtVND(r.new_cpa)}</td>
+      <td class="num ${cpaCls}">${deltaCpa>0?'+':''}${fmt(deltaCpa,1)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+// Sample KW per bucket
+if (sampleTbody) {
+  const rows = [];
+  RID.forEach(r => {
+    const stratTag = r.strategy === 'Aggressive' ? '<span class="tag tag-aggressive">Aggressive</span>' : '<span class="tag tag-standard">Standard</span>';
+    (r.sample_kw || []).forEach(kw => {
+      rows.push(`<tr class="${r.strategy === 'Aggressive' ? 'row-aggressive' : ''}">
+        <td>${tag(r.bucket)}</td>
+        <td>${stratTag}</td>
+        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${kw.keyword||''}">${kw.keyword||'—'}</td>
+        <td class="num">${fmt(kw.search_top_is,1)}%</td>
+        <td class="num">${fmt(kw.scale,2)}×</td>
+        <td class="num delta-good">+${fmt(kw.incr_conv,1)}</td>
+        <td class="num">${fmtVND(kw.incr_cost)}</td>
+      </tr>`);
+    });
+  });
+  sampleTbody.innerHTML = rows.join('') || '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:18px">Không có KW eligible</td></tr>';
+}
+
+// Aggressive callout
+const aggBuckets = RID.filter(r => r.strategy === 'Aggressive');
+const callout = document.getElementById('aggressive-callout');
+if (callout && aggBuckets.length > 0) {
+  callout.style.display = 'block';
+  callout.innerHTML = `<b>⚡ Aggressive opportunity:</b> ${aggBuckets.length} bucket (${aggBuckets.map(b=>b.bucket).join(', ')}) đã vượt IS cap chuẩn. Mỗi bucket có thể push tiếp lên <b>${aggBuckets[0].cap_aggressive}%</b> — nhưng DR phạt nặng hơn (CPC +45% per scale, CVR -15% per scale). ` +
+    aggBuckets.map(b=>`<br>• <b>${b.bucket}</b>: IS ${b.current_is_weighted}% → ${b.target_is}%, +${Math.round(b.added_conv)} conv, +${(b.added_cost/1e6).toFixed(0)}M VND, CPA ${b.cpa_change_pct>0?'+':''}${b.cpa_change_pct.toFixed(1)}%.`).join('');
+}
+
+const sA=D.sem.A,sB=D.sem.B,sC=D.sem.C;
+document.getElementById('sA-cost').textContent=fmtVND(sA.cost);
+document.getElementById('sA-conv').textContent=fmt(sA.conv,0);
+document.getElementById('sA-cpa').textContent=fmtVND(sA.cpa);
+document.getElementById('sB-cost').textContent=fmtVND(sB.cost);
+document.getElementById('sB-conv').textContent=fmt(sB.conv,0);
+document.getElementById('sB-cpa').textContent=fmtVND(sB.cpa);
+document.getElementById('sB-cost-d').textContent=fmtPct((sB.cost-sA.cost)/sA.cost*100);
+document.getElementById('sB-conv-d').textContent=fmtPct((sB.conv-sA.conv)/sA.conv*100);
+document.getElementById('sB-cpa-d').textContent=fmtPct((sB.cpa-sA.cpa)/sA.cpa*100);
+document.getElementById('sB-cpa-d').className=(sB.cpa<sA.cpa)?'s-delta delta-good':'s-delta delta-bad';
+document.getElementById('sC-cost').textContent=fmtVND(sC.cost);
+document.getElementById('sC-conv').textContent=fmt(sC.conv,0);
+document.getElementById('sC-cpa').textContent=fmtVND(sC.cpa);
+document.getElementById('sC-cost-d').textContent=fmtPct((sC.cost-sA.cost)/sA.cost*100);
+document.getElementById('sC-conv-d').textContent=fmtPct((sC.conv-sA.conv)/sA.conv*100);
+document.getElementById('sC-cpa-d').textContent=fmtPct((sC.cpa-sA.cpa)/sA.cpa*100);
+document.getElementById('sC-cpa-d').className=(sC.cpa<sA.cpa)?'s-delta delta-good':'s-delta delta-bad';
+document.getElementById('sC-extra').textContent=fmtVND(sC.extra_budget);
+
+// Dynamic recommendation — match actual data
+const bConvDelta = (sB.conv-sA.conv)/sA.conv*100;
+const bCpaDelta = (sB.cpa-sA.cpa)/sA.cpa*100;
+const cConvDelta = (sC.conv-sA.conv)/sA.conv*100;
+const cCpaDelta = (sC.cpa-sA.cpa)/sA.cpa*100;
+const phase1Verdict = bCpaDelta < 0 ? 'CPA giảm, conv tăng — recommend chạy ngay' : (bCpaDelta < 5 && bConvDelta > 0 ? 'CPA gần neutral, conv tăng — vẫn nên chạy' : 'CPA tăng do mất conv từ KW bị pause — cần review threshold "Bad" trước khi pause hết');
+const phase2Verdict = cCpaDelta < bCpaDelta ? 'Scale-up làm CPA tốt hơn (do cắt waste mạnh hơn)' : 'Scale-up làm CPA xấu hơn do DR — chỉ làm nếu cần volume';
+
+document.getElementById('sem-reco-text').innerHTML=`
+  <b>Phase 1 (Scenario B — budget neutral):</b> Pause ${fmt(ACT.bad_count)} bad KW (save ${fmtVND(ACT.budget_saved)}), reinvest vào ${fmt(ACT.good_count)} good KW → conv ${fmt(sB.conv,0)} (${bConvDelta>=0?'+':''}${fmt(bConvDelta,1)}%), CPA ${fmtVND(sB.cpa)} (${bCpaDelta>=0?'+':''}${fmt(bCpaDelta,1)}%). <i>${phase1Verdict}</i>.<br>
+  <b>Phase 2 (Scenario C — scale-up):</b> ${sC.extra_budget>0 ? 'Đầu tư thêm '+fmtVND(sC.extra_budget)+' để chạm IS cap' : 'Cắt waste sâu → tổng cost '+fmtVND(sC.cost)} → conv ${fmt(sC.conv,0)} (${cConvDelta>=0?'+':''}${fmt(cConvDelta,1)}%), CPA ${fmtVND(sC.cpa)} (${cCpaDelta>=0?'+':''}${fmt(cCpaDelta,1)}%). <i>${phase2Verdict}</i>.<br>
+  <b>Phase 0 (parallel):</b> Fix structure — restructure ${fmt(S.ag_with_any_issue_enabled||0)} AG enabled vi phạm + dedupe ${fmt(S.duplicate_kw_count_enabled||0)} duplicate KW enabled để cải thiện QS + auction signal.
+`;
+
+document.getElementById('struct-tbody').innerHTML=D.sem.top_structure_issues.map(s=>{
+  const its=[];
+  if(s.Issue_TooMany) its.push('TooMany');
+  if(s.Issue_MultiMatch) its.push('MultiMatch');
+  if(s.Issue_LengthVariance) its.push('LenVar');
+  if(s.Issue_BucketLeak) its.push('Leak');
+  return `<tr>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${s.Campaign}">${s.Campaign}</td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${s['Ad group']}">${s['Ad group']}</td>
+    <td>${tag(s.KW_Type)}</td>
+    <td class="num ${s.KW_Count>5?'flag':''}">${s.KW_Count}</td>
+    <td class="num ${s.N_Match_Types>1?'flag':''}">${s.N_Match_Types}</td>
+    <td class="num ${s.Word_Len_Range>2?'flag':''}">${s.Word_Len_Range}</td>
+    <td style="font-size:11px;color:var(--pmax-red);font-weight:600">${its.join(', ')}</td>
+  </tr>`;
+}).join('');
+
+document.getElementById('bad-tbody').innerHTML=D.sem.top_bad.map(b=>`
+  <tr>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${b.Keyword}">${b.Keyword}</td>
+    <td>${tag(b.KW_Type)}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:var(--gray-500)" title="${b.Campaign}">${b.Campaign}</td>
+    <td class="num">${b['Quality Score']??'—'}</td>
+    <td class="num">${fmtVND(b.Cost)}</td>
+    <td class="num">${fmt(b.Conversions,1)}</td>
+    <td class="num">${b['Cost / conv.']?fmtVND(b['Cost / conv.']):'—'}</td>
+    <td class="num">${b.CPA_Ratio?fmt(b.CPA_Ratio,1)+'×':'—'}</td>
+    <td style="font-size:10px">${b.Status_v3}</td>
+  </tr>`).join('');
+
+document.getElementById('good-tbody').innerHTML=D.sem.top_good.map(g=>`
+  <tr>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${g.Keyword}">${g.Keyword}</td>
+    <td>${tag(g.KW_Type)}</td>
+    <td class="num">${g['Quality Score']??'—'}</td>
+    <td class="num">${fmtVND(g.Cost)}</td>
+    <td class="num">${fmt(g.Conversions,1)}</td>
+    <td class="num">${fmtVND(g['Cost / conv.'])}</td>
+    <td class="num">${fmt(g['Search top IS'],1)}%</td>
+    <td class="num">${g.IS_Cap}%</td>
+    <td class="num">${fmt(g.Scale,2)}×</td>
+    <td class="num" style="font-size:11px">${fmtVND(g['Avg. CPC'])}→${fmtVND(g.New_CPC)}</td>
+    <td class="num delta-good">+${fmt(g.Incr_Conv,1)}</td>
+    <td class="num">${fmtVND(g.Incr_Cost)}</td>
+    <td class="num">${fmtVND(g.New_CPA)}</td>
+  </tr>`).join('');
+
+// ============ PMAX TAB ============
+const pm=D.pmax;
+document.getElementById('pm-n').textContent=fmt(pm.baseline.n_ags_enabled);
+document.getElementById('pm-best').textContent=fmtVND(pm.pareto.best_cpa);
+document.getElementById('pm-worst').textContent=fmtVND(pm.pareto.worst_cpa);
+document.getElementById('pm-spread').textContent=fmt(pm.pareto.worst_cpa/pm.pareto.best_cpa,0)+'×';
+
+document.querySelector('#pm-pareto-table tbody').innerHTML=`
+  <tr><td><b>Top 20% AGs</b> (best CPA)</td><td class="num">${fmt(pm.pareto.top20_cost_pct,1)}%</td><td class="num delta-good">${fmt(pm.pareto.top20_conv_pct,1)}%</td><td class="num">${fmtVND(pm.pareto.top20_cpa)}</td></tr>
+  <tr><td><b>Top 30% AGs</b></td><td class="num">${fmt(pm.pareto.top30_cost_pct,1)}%</td><td class="num delta-good">${fmt(pm.pareto.top30_conv_pct,1)}%</td><td class="num">${fmtVND(pm.pareto.top30_cpa)}</td></tr>
+  <tr><td><b>Top 50% AGs</b></td><td class="num">${fmt(pm.pareto.top50_cost_pct,1)}%</td><td class="num">${fmt(pm.pareto.top50_conv_pct,1)}%</td><td class="num">${fmtVND(pm.pareto.top50_cpa)}</td></tr>
+  <tr><td><b>Blended (all)</b></td><td class="num">100%</td><td class="num">100%</td><td class="num">${fmtVND(pm.baseline.cpa)}</td></tr>
+  <tr><td><b>Median AG CPA</b></td><td class="num">—</td><td class="num">—</td><td class="num">${fmtVND(pm.pareto.median_cpa)}</td></tr>
+  <tr><td><b>P75 AG CPA</b></td><td class="num">—</td><td class="num">—</td><td class="num">${fmtVND(pm.pareto.p75_cpa)}</td></tr>
+`;
+
+document.getElementById('pm-insight').innerHTML=`<b>Pareto cực mạnh:</b> Top 20% AGs hiệu quả chỉ ngốn <b>${fmt(pm.pareto.top20_cost_pct,1)}%</b> cost nhưng deliver <b>${fmt(pm.pareto.top20_conv_pct,1)}%</b> conversions (CPA ${fmtVND(pm.pareto.top20_cpa)} so với blended ${fmtVND(pm.baseline.cpa)}). CPA spread ${fmt(pm.pareto.worst_cpa/pm.pareto.best_cpa,0)}× — budget đang dồn vào ${100-pm.pareto.top20_cost_pct.toFixed(0)}% AGs kém. Đây là Pareto rõ nhất cần fix.`;
+
+document.getElementById('pA-cost').textContent=fmtVND(pm.baseline.total_cost);
+document.getElementById('pA-conv').textContent=fmt(pm.baseline.total_conv,0);
+document.getElementById('pA-cpa').textContent=fmtVND(pm.baseline.cpa);
+
+['1','2','3'].forEach(i=>{
+  const S2=pm['S'+i];
+  document.getElementById('p'+i+'-cost').textContent=fmtVND(S2.new_cost);
+  document.getElementById('p'+i+'-conv').textContent=fmt(S2.new_conv,0);
+  document.getElementById('p'+i+'-cpa').textContent=fmtVND(S2.new_cpa);
+  document.getElementById('p'+i+'-conv-d').textContent=fmtPct(S2.conv_change_pct);
+  document.getElementById('p'+i+'-cpa-d').textContent=fmtPct(S2.cpa_change_pct);
+  document.getElementById('p'+i+'-cpa-d').className=S2.cpa_change_pct<0?'s-delta delta-good':'s-delta delta-bad';
+});
+
+document.getElementById('pm-reco').innerHTML=`
+  <b>Recommend S2 (Realistic)</b> — giảm CPA ${fmt(pm.S2.cpa_change_pct,1)}%, tăng conv ${fmt(pm.S2.conv_change_pct,1)}%, neutral budget. Pause ${pm.S2.n_paused} bottom AGs (${fmtVND(pm.S2.freed_budget)}), scale top ${pm.S2.n_scaled} AGs với multiplier 2-3×.
+  Test 2-3 tuần, nếu CPA giảm đạt ≥20% → escalate S3 (giảm ${fmt(pm.S3.cpa_change_pct,1)}%, tăng ${fmt(pm.S3.conv_change_pct,0)}%) cho campaigns mature.
+`;
+
+document.querySelector('#pm-top-table tbody').innerHTML=pm.top_perf.map(p=>`
+  <tr>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${p['Asset Group']}">${p['Asset Group']}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:var(--gray-500)" title="${p.Campaign}">${p.Campaign}</td>
+    <td class="num">${fmtVND(p.Cost)}</td>
+    <td class="num">${fmt(p.Conversions,0)}</td>
+    <td class="num delta-good">${fmtVND(p['Cost / conv.'])}</td>
+    <td class="num">${fmt(p.Cost_Cumul_Pct,1)}%</td>
+    <td class="num">${fmt(p.Conv_Cumul_Pct,1)}%</td>
+    <td><span class="tag tag-scale">SCALE</span></td>
+  </tr>`).join('');
+
+document.querySelector('#pm-bot-table tbody').innerHTML=pm.bottom_perf.map(p=>`
+  <tr>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${p['Asset Group']}">${p['Asset Group']}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:var(--gray-500)" title="${p.Campaign}">${p.Campaign}</td>
+    <td class="num">${fmtVND(p.Cost)}</td>
+    <td class="num">${fmt(p.Conversions,0)}</td>
+    <td class="num delta-bad">${fmtVND(p['Cost / conv.'])}</td>
+    <td><span class="tag tag-pause">PAUSE</span></td>
+  </tr>`).join('');
+</script>
+</body>
+</html>
